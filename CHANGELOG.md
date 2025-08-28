@@ -18,14 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Development Progress
 - [x] Project initialization and structure setup
 - [x] Documentation framework created
-- [ ] Cloudflare D1 API credentials implementation
-- [ ] Core node functionality development
-- [ ] AI Agent tool compatibility integration
-- [ ] Local testing and validation
-- [ ] GitHub repository creation
-- [ ] npm package publication
+- [x] Cloudflare D1 API credentials implementation
+- [x] Core node functionality development
+- [x] AI Agent tool compatibility integration
+- [x] Local testing and validation
+- [x] GitHub repository creation
+- [x] npm package publication
 
-## [0.1.0] - TBD
+## [0.1.0] - 2025-01-28
 
 ### Added
 - Cloudflare D1 database integration for n8n
