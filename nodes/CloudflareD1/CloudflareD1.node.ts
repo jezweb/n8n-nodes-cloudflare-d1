@@ -1436,6 +1436,19 @@ export class CloudflareD1 implements INodeType {
 				default: 20,
 				description: 'Maximum number of matching messages to return',
 			},
+			{
+				displayName: 'Enable Fuzzy Search',
+				name: 'enableFuzzySearch',
+				type: 'boolean',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+						operation: ['searchMessages'],
+					},
+				},
+				default: false,
+				description: 'Whether to enable flexible matching for plurals, suffixes, and word variations (e.g., "designer" matches "designers")',
+			},
 
 			// Memory: Clear Session warning
 			{
@@ -1982,6 +1995,7 @@ export class CloudflareD1 implements INodeType {
 							const searchSessionId = this.getNodeParameter('searchSessionId', i, '') as string;
 							const searchMessageTypes = this.getNodeParameter('searchMessageTypes', i, ['human', 'ai']) as string[];
 							const searchLimit = this.getNodeParameter('searchLimit', i, 20) as number;
+							const enableFuzzySearch = this.getNodeParameter('enableFuzzySearch', i, false) as boolean;
 							
 							result = await CloudflareD1Utils.searchMessages(
 								this,
@@ -1989,7 +2003,8 @@ export class CloudflareD1 implements INodeType {
 								searchQuery,
 								searchSessionId || undefined,
 								searchMessageTypes,
-								searchLimit
+								searchLimit,
+								enableFuzzySearch
 							);
 							break;
 							

@@ -13,6 +13,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance analytics and query optimization
 - Custom SQL function support
 
+## [0.5.2] - 2025-01-28
+
+### Added
+#### Fuzzy Search for Memory Operations
+- **Enable Fuzzy Search**: New optional parameter in Search Messages operation
+  - Handles plural/singular variations (e.g., "designer" matches "designers")
+  - Removes/adds common suffixes (s, es, ing, ed, er, ly, ion)
+  - Splits multi-word searches to match individual words
+  - Maintains backward compatibility with exact search (default: disabled)
+- **Smart Pattern Generation**: Automatically generates multiple search patterns for flexible matching
+- **AI Agent Optimized**: Clear parameter descriptions and examples for AI Agent understanding
+
+### Improved
+- **Search Flexibility**: Addresses common search frustrations where exact terms don't match variations
+- **Better User Experience**: Optional feature allows users to choose between exact and flexible search
+- **Performance Aware**: Efficient SQL query generation with parameterized patterns
+
+### Technical
+- New fuzzy search pattern generation algorithm in `CloudflareD1Utils.generateFuzzySearchPatterns()`
+- Enhanced `searchMessages()` method with fuzzy search capability
+- Multiple LIKE patterns with OR conditions for comprehensive matching
+- Maintains SQL injection protection through parameterized queries
+
 ## [0.5.1] - 2025-01-28
 
 ### Fixed

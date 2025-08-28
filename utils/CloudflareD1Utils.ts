@@ -1001,6 +1001,47 @@ export class CloudflareD1Utils {
 	}
 
 	/**
+	 * Generate fuzzy search patterns for a search term
+	 */
+	static generateFuzzySearchPatterns(searchQuery: string): string[] {
+		const patterns: string[] = [];
+		const words = searchQuery.toLowerCase().trim().split(/\s+/);
+		
+		// Add original search term
+		patterns.push(`%${searchQuery}%`);
+		
+		// If multiple words, add patterns for each word
+		if (words.length > 1) {
+			words.forEach(word => {
+				patterns.push(`%${word}%`);
+			});
+		}
+		
+		// For each word, add variations with common suffixes removed/added
+		words.forEach(word => {
+			// Remove common suffixes
+			const suffixesToRemove = ['s', 'es', 'ing', 'ed', 'er', 'ly', 'ion'];
+			suffixesToRemove.forEach(suffix => {
+				if (word.endsWith(suffix) && word.length > suffix.length + 2) {
+					const root = word.slice(0, -suffix.length);
+					patterns.push(`%${root}%`);
+				}
+			});
+			
+			// Add common suffixes to root words
+			if (word.length > 3) {
+				const suffixesToAdd = ['s', 'es', 'ing', 'ed', 'er'];
+				suffixesToAdd.forEach(suffix => {
+					patterns.push(`%${word}${suffix}%`);
+				});
+			}
+		});
+		
+		// Remove duplicates and return
+		return [...new Set(patterns)];
+	}
+
+	/**
 	 * Search messages by content
 	 */
 	static async searchMessages(
@@ -1009,18 +1050,32 @@ export class CloudflareD1Utils {
 		searchQuery: string,
 		sessionId?: string,
 		messageTypes: string[] = ['human', 'ai'],
-		limit: number = 20
+		limit: number = 20,
+		enableFuzzySearch: boolean = false
 	): Promise<D1MemoryOperationResult> {
 		const tableName = 'chat_memory';
 		
-		let whereClause = `WHERE content LIKE ?`;
-		const params = [`%${searchQuery}%`];
+		let whereClause: string;
+		const params: string[] = [];
 		
+		// Build content search clause
+		if (enableFuzzySearch) {
+			const patterns = this.generateFuzzySearchPatterns(searchQuery);
+			const contentConditions = patterns.map(() => 'content LIKE ?').join(' OR ');
+			whereClause = `WHERE (${contentConditions})`;
+			params.push(...patterns);
+		} else {
+			whereClause = `WHERE content LIKE ?`;
+			params.push(`%${searchQuery}%`);
+		}
+		
+		// Add session filter
 		if (sessionId) {
 			whereClause += ` AND session_id = ?`;
 			params.push(sessionId);
 		}
 		
+		// Add message type filter
 		if (messageTypes.length > 0) {
 			whereClause += ` AND message_type IN (${messageTypes.map(() => '?').join(',')})`;
 			params.push(...messageTypes);
