@@ -58,14 +58,9 @@ export class CloudflareD1 implements INodeType {
 				type: 'options',
 				options: [
 					{
-						name: 'Table',
-						value: 'table',
-						description: 'Work with database tables using structured operations (Insert, Select, Update, Delete)',
-					},
-					{
-						name: 'Table Management',
-						value: 'tableManagement',
-						description: 'Create, alter, and manage table schemas',
+						name: 'Database',
+						value: 'database',
+						description: 'Database-level operations (export, import, info)',
 					},
 					{
 						name: 'Query',
@@ -78,9 +73,14 @@ export class CloudflareD1 implements INodeType {
 						description: 'Build queries visually without writing SQL',
 					},
 					{
-						name: 'Database',
-						value: 'database',
-						description: 'Database-level operations (export, import, info)',
+						name: 'Table',
+						value: 'table',
+						description: 'Work with database tables using structured operations (Insert, Select, Update, Delete)',
+					},
+					{
+						name: 'Table Management',
+						value: 'tableManagement',
+						description: 'Create, alter, and manage table schemas',
 					},
 				],
 				default: 'table',
@@ -611,72 +611,87 @@ export class CloudflareD1 implements INodeType {
 						displayName: 'Column',
 						values: [
 							{
-								displayName: 'Name',
-								name: 'name',
-								type: 'string',
-								default: '',
-								required: true,
-								placeholder: 'column_name',
-								description: 'Name of the column',
+						displayName: 'Auto Increment',
+						name: 'autoIncrement',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to auto-increment this integer primary key',
 							},
 							{
-								displayName: 'Type',
-								name: 'type',
-								type: 'options',
-								options: [
-									{ name: 'Text', value: 'TEXT' },
-									{ name: 'Integer', value: 'INTEGER' },
-									{ name: 'Real (Float)', value: 'REAL' },
-									{ name: 'Blob (Binary)', value: 'BLOB' },
-									{ name: 'Boolean', value: 'BOOLEAN' },
-									{ name: 'Date/Time', value: 'DATETIME' },
-									{ name: 'JSON', value: 'JSON' },
-								],
-								default: 'TEXT',
-								description: 'Data type for the column',
+						displayName: 'Default Value',
+						name: 'defaultValue',
+						type: 'string',
+						default: '',
+						description: 'Default value for the column (leave empty for no default)',
 							},
 							{
-								displayName: 'Primary Key',
-								name: 'primaryKey',
-								type: 'boolean',
-								default: false,
-								description: 'Whether this column is a primary key',
+						displayName: 'Name',
+						name: 'name',
+						type: 'string',
+						default: '',
+							required:	true,
+						placeholder: 'column_name',
+						description: 'Name of the column',
 							},
 							{
-								displayName: 'Auto Increment',
-								name: 'autoIncrement',
-								type: 'boolean',
-								displayOptions: {
-									show: {
-										type: ['INTEGER'],
-										primaryKey: [true],
+						displayName: 'Not Null',
+						name: 'notNull',
+						type: 'boolean',
+						default: false,
+						description: 'Whether this column must have a value',
+							},
+							{
+						displayName: 'Primary Key',
+						name: 'primaryKey',
+						type: 'boolean',
+						default: false,
+						description: 'Whether this column is a primary key',
+							},
+							{
+						displayName: 'Type',
+						name: 'type',
+						type: 'options',
+						options: [
+									{
+										name: 'Blob (Binary)',
+										value: 'BLOB',
 									},
-								},
-								default: false,
-								description: 'Whether to auto-increment this integer primary key',
+									{
+										name: 'Boolean',
+										value: 'BOOLEAN',
+									},
+									{
+										name: 'Date/Time',
+										value: 'DATETIME',
+									},
+									{
+										name: 'Integer',
+										value: 'INTEGER',
+									},
+									{
+										name: 'JSON',
+										value: 'JSON',
+									},
+									{
+										name: 'Real (Float)',
+										value: 'REAL',
+									},
+									{
+										name: 'Text',
+										value: 'TEXT',
+									},
+								],
+						default: 'TEXT',
+						description: 'Data type for the column',
 							},
 							{
-								displayName: 'Not Null',
-								name: 'notNull',
-								type: 'boolean',
-								default: false,
-								description: 'Whether this column must have a value',
+						displayName: 'Unique',
+						name: 'unique',
+						type: 'boolean',
+						default: false,
+						description: 'Whether values in this column must be unique',
 							},
-							{
-								displayName: 'Unique',
-								name: 'unique',
-								type: 'boolean',
-								default: false,
-								description: 'Whether values in this column must be unique',
-							},
-							{
-								displayName: 'Default Value',
-								name: 'defaultValue',
-								type: 'string',
-								default: '',
-								description: 'Default value for the column (leave empty for no default)',
-							},
-						],
+					],
 					},
 				],
 			},
@@ -987,7 +1002,7 @@ export class CloudflareD1 implements INodeType {
 
 			// Query Builder specific fields
 			{
-				displayName: 'Columns',
+				displayName: 'Column Names or IDs',
 				name: 'queryColumns',
 				type: 'multiOptions',
 				displayOptions: {
@@ -1001,7 +1016,7 @@ export class CloudflareD1 implements INodeType {
 					loadOptionsMethod: 'getTableColumns',
 				},
 				default: [],
-				description: 'Columns to select (leave empty for all)',
+				description: 'Columns to select (leave empty for all). Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Where Conditions',
@@ -1024,7 +1039,7 @@ export class CloudflareD1 implements INodeType {
 						displayName: 'Condition',
 						values: [
 							{
-								displayName: 'Field',
+								displayName: 'Field Name or ID',
 								name: 'field',
 								type: 'options',
 								typeOptions: {
@@ -1033,26 +1048,26 @@ export class CloudflareD1 implements INodeType {
 								},
 								default: '',
 								required: true,
-								description: 'Field to filter on',
+								description: 'Field to filter on. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 							},
 							{
 								displayName: 'Operator',
 								name: 'operator',
 								type: 'options',
 								options: [
-									{ name: 'Equals', value: '=' },
-									{ name: 'Not Equals', value: '!=' },
-									{ name: 'Greater Than', value: '>' },
-									{ name: 'Less Than', value: '<' },
-									{ name: 'Greater or Equal', value: '>=' },
-									{ name: 'Less or Equal', value: '<=' },
-									{ name: 'Like', value: 'LIKE' },
-									{ name: 'Not Like', value: 'NOT LIKE' },
-									{ name: 'In', value: 'IN' },
-									{ name: 'Not In', value: 'NOT IN' },
-									{ name: 'Is Null', value: 'IS NULL' },
-									{ name: 'Is Not Null', value: 'IS NOT NULL' },
 									{ name: 'Between', value: 'BETWEEN' },
+									{ name: 'Equals', value: '=' },
+									{ name: 'Greater or Equal', value: '>=' },
+									{ name: 'Greater Than', value: '>' },
+									{ name: 'In', value: 'IN' },
+									{ name: 'Is Not Null', value: 'IS NOT NULL' },
+									{ name: 'Is Null', value: 'IS NULL' },
+									{ name: 'Less or Equal', value: '<=' },
+									{ name: 'Less Than', value: '<' },
+									{ name: 'Like', value: 'LIKE' },
+									{ name: 'Not Equals', value: '!=' },
+									{ name: 'Not In', value: 'NOT IN' },
+									{ name: 'Not Like', value: 'NOT LIKE' },
 								],
 								default: '=',
 								description: 'Comparison operator',
@@ -1106,7 +1121,7 @@ export class CloudflareD1 implements INodeType {
 						displayName: 'Sort',
 						values: [
 							{
-								displayName: 'Field',
+								displayName: 'Field Name or ID',
 								name: 'field',
 								type: 'options',
 								typeOptions: {
@@ -1115,7 +1130,7 @@ export class CloudflareD1 implements INodeType {
 								},
 								default: '',
 								required: true,
-								description: 'Field to sort by',
+								description: 'Field to sort by. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 							},
 							{
 								displayName: 'Direction',
@@ -1171,18 +1186,18 @@ export class CloudflareD1 implements INodeType {
 					},
 				},
 				options: [
-					{ name: 'Count', value: 'COUNT' },
-					{ name: 'Sum', value: 'SUM' },
 					{ name: 'Average', value: 'AVG' },
-					{ name: 'Minimum', value: 'MIN' },
-					{ name: 'Maximum', value: 'MAX' },
+					{ name: 'Count', value: 'COUNT' },
 					{ name: 'Group Concat', value: 'GROUP_CONCAT' },
+					{ name: 'Maximum', value: 'MAX' },
+					{ name: 'Minimum', value: 'MIN' },
+					{ name: 'Sum', value: 'SUM' },
 				],
 				default: 'COUNT',
 				description: 'Aggregate function to apply',
 			},
 			{
-				displayName: 'Column',
+				displayName: 'Column Name or ID',
 				name: 'aggregateColumn',
 				type: 'options',
 				displayOptions: {
@@ -1199,10 +1214,10 @@ export class CloudflareD1 implements INodeType {
 					loadOptionsMethod: 'getTableColumns',
 				},
 				default: '',
-				description: 'Column to aggregate (leave empty for COUNT(*))',
+				description: 'Column to aggregate (leave empty for COUNT(*)). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
-				displayName: 'Group By',
+				displayName: 'Group By Names or IDs',
 				name: 'groupBy',
 				type: 'multiOptions',
 				displayOptions: {
@@ -1216,12 +1231,12 @@ export class CloudflareD1 implements INodeType {
 					loadOptionsMethod: 'getTableColumns',
 				},
 				default: [],
-				description: 'Columns to group by',
+				description: 'Columns to group by. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 
 			// Get Distinct Values fields
 			{
-				displayName: 'Column',
+				displayName: 'Column Name or ID',
 				name: 'distinctColumn',
 				type: 'options',
 				displayOptions: {
@@ -1236,7 +1251,7 @@ export class CloudflareD1 implements INodeType {
 				},
 				default: '',
 				required: true,
-				description: 'Column to get distinct values from',
+				description: 'Column to get distinct values from. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 
 			// DATABASE OPERATIONS
