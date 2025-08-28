@@ -25,9 +25,15 @@ export type D1Operation =
 	| 'exportDatabase'
 	| 'importDatabase'
 	| 'getDatabaseInfo'
-	| 'listDatabases';
+	| 'listDatabases'
+	// Memory operations
+	| 'getChatHistory'
+	| 'searchMessages'
+	| 'getRecentMessages'
+	| 'getSessionList'
+	| 'clearSession';
 
-export type D1Resource = 'table' | 'query' | 'builder' | 'database' | 'tableManagement';
+export type D1Resource = 'table' | 'query' | 'builder' | 'database' | 'tableManagement' | 'memory';
 
 // Table introspection types
 export interface D1TableInfo {
@@ -246,4 +252,40 @@ export interface D1AlterTableOperation {
 	newName?: string;
 	indexName?: string;
 	indexColumns?: string[];
+}
+
+// Memory management types
+export interface D1MemoryMessage {
+	id: number;
+	session_id: string;
+	message_type: 'human' | 'ai';
+	content: string;
+	metadata?: IDataObject;
+	timestamp: string;
+	created_at: string;
+}
+
+export interface D1SessionInfo {
+	session_id: string;
+	message_count: number;
+	first_message_time: string;
+	last_message_time: string;
+}
+
+export interface D1MemorySearchResult {
+	messages: D1MemoryMessage[];
+	total_matches: number;
+	search_query: string;
+	session_id?: string;
+}
+
+export interface D1MemoryOperationResult {
+	success: boolean;
+	operation: string;
+	session_id?: string;
+	messages?: D1MemoryMessage[];
+	sessions?: D1SessionInfo[];
+	search_result?: D1MemorySearchResult;
+	rows_affected?: number;
+	meta?: IDataObject;
 }

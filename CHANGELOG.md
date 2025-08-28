@@ -13,6 +13,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance analytics and query optimization
 - Custom SQL function support
 
+## [0.5.0] - 2025-01-28
+
+### Added
+#### Memory Resource for AI Agents
+- **Get Chat History**: Retrieve conversation history for specific sessions
+  - Filter by message types (human/ai)
+  - Configurable limits and sort order (oldest/newest first)
+  - Full session conversation retrieval with metadata
+- **Search Messages**: Search messages by content across all sessions
+  - Global search across all conversations
+  - Session-specific search filtering
+  - Message type filtering with flexible limits
+- **Get Recent Messages**: Fetch the most recent messages from a session
+  - Quick access to latest conversation context
+  - Configurable message limits for AI context management
+- **Get Session List**: List all available session IDs with statistics
+  - Message counts per session
+  - First and last message timestamps
+  - Session activity overview for AI agents
+- **Clear Session**: Remove all messages for a specific session
+  - Safe session cleanup with confirmation warnings
+  - Complete conversation history removal
+
+#### AI Agent Optimization
+- **Memory Resource**: Dedicated resource type for chat memory operations
+- **AI-Friendly Descriptions**: Clear, detailed parameter descriptions for AI Agent tools
+- **Structured Operations**: Pre-built SQL queries optimized for common memory access patterns
+- **Rich Metadata**: Comprehensive operation results with counts, timestamps, and session info
+- **Parameter Validation**: Built-in input validation and error handling
+- **Security**: All operations use parameterized queries to prevent SQL injection
+
+### Improved
+- Enhanced AI Agent tool compatibility with memory-specific operations
+- Better parameter organization for memory operations
+- Comprehensive TypeScript type definitions for memory operations
+- Optimized SQL queries for chat memory access patterns
+
+### Technical
+- New memory operation types: `getChatHistory`, `searchMessages`, `getRecentMessages`, `getSessionList`, `clearSession`
+- Memory utility methods in `CloudflareD1Utils.ts`
+- Memory-specific TypeScript interfaces: `D1MemoryMessage`, `D1SessionInfo`, `D1MemoryOperationResult`
+- Integration with existing `chat_memory` table schema
+
 ## [0.4.0] - 2025-01-28
 
 ### Added

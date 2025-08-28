@@ -63,6 +63,11 @@ export class CloudflareD1 implements INodeType {
 						description: 'Database-level operations (export, import, info)',
 					},
 					{
+						name: 'Memory',
+						value: 'memory',
+						description: 'Access and manage chat memory for AI agents (conversation history, message search)',
+					},
+					{
 						name: 'Query',
 						value: 'query',
 						description: 'Execute raw SQL queries with full flexibility',
@@ -1254,6 +1259,199 @@ export class CloudflareD1 implements INodeType {
 				description: 'Column to get distinct values from. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 
+			// MEMORY OPERATIONS
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+					},
+				},
+				options: [
+					{
+						name: 'Clear Session',
+						value: 'clearSession',
+						description: 'Remove all messages for a specific session',
+						action: 'Clear session memory',
+					},
+					{
+						name: 'Get Chat History',
+						value: 'getChatHistory',
+						description: 'Retrieve conversation history for a specific session',
+						action: 'Get chat history for session',
+					},
+					{
+						name: 'Get Recent Messages',
+						value: 'getRecentMessages',
+						description: 'Get the most recent messages from a session',
+						action: 'Get recent messages',
+					},
+					{
+						name: 'Get Session List',
+						value: 'getSessionList',
+						description: 'List all available session IDs with message counts',
+						action: 'Get list of all sessions',
+					},
+					{
+						name: 'Search Messages',
+						value: 'searchMessages',
+						description: 'Search messages by content or metadata across all sessions',
+						action: 'Search messages by content',
+					},
+				],
+				default: 'getChatHistory',
+				noDataExpression: true,
+			},
+
+			// Memory: Get Chat History fields
+			{
+				displayName: 'Session ID',
+				name: 'sessionId',
+				type: 'string',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+						operation: ['getChatHistory', 'getRecentMessages', 'clearSession'],
+					},
+				},
+				default: '',
+				required: true,
+				placeholder: 'fe4621679-4f44f-ca991e52d2ea46508',
+				description: 'The session ID to retrieve messages for',
+			},
+			{
+				displayName: 'Message Types',
+				name: 'messageTypes',
+				type: 'multiOptions',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+						operation: ['getChatHistory'],
+					},
+				},
+				options: [
+					{ name: 'Human Messages', value: 'human' },
+					{ name: 'AI Messages', value: 'ai' },
+				],
+				default: ['human', 'ai'],
+				description: 'Types of messages to include in the history',
+			},
+			{
+				displayName: 'Limit',
+				name: 'memoryLimit',
+				type: 'number',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+						operation: ['getChatHistory', 'getRecentMessages'],
+					},
+				},
+				typeOptions: {
+					minValue: 1,
+					maxValue: 1000,
+				},
+				default: 50,
+				description: 'Maximum number of messages to return',
+			},
+			{
+				displayName: 'Sort Order',
+				name: 'sortOrder',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+						operation: ['getChatHistory'],
+					},
+				},
+				options: [
+					{ name: 'Oldest First', value: 'ASC' },
+					{ name: 'Newest First', value: 'DESC' },
+				],
+				default: 'ASC',
+				description: 'Order to return messages in',
+			},
+
+			// Memory: Search Messages fields
+			{
+				displayName: 'Search Query',
+				name: 'searchQuery',
+				type: 'string',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+						operation: ['searchMessages'],
+					},
+				},
+				default: '',
+				required: true,
+				placeholder: 'chef classification hotel',
+				description: 'Text to search for in message content',
+			},
+			{
+				displayName: 'Search in Session',
+				name: 'searchSessionId',
+				type: 'string',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+						operation: ['searchMessages'],
+					},
+				},
+				default: '',
+				placeholder: 'fe4621679-4f44f-ca991e52d2ea46508',
+				description: 'Optional: Limit search to specific session (leave empty to search all sessions)',
+			},
+			{
+				displayName: 'Search Message Types',
+				name: 'searchMessageTypes',
+				type: 'multiOptions',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+						operation: ['searchMessages'],
+					},
+				},
+				options: [
+					{ name: 'Human Messages', value: 'human' },
+					{ name: 'AI Messages', value: 'ai' },
+				],
+				default: ['human', 'ai'],
+				description: 'Types of messages to search within',
+			},
+			{
+				displayName: 'Search Limit',
+				name: 'searchLimit',
+				type: 'number',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+						operation: ['searchMessages'],
+					},
+				},
+				typeOptions: {
+					minValue: 1,
+					maxValue: 500,
+				},
+				default: 20,
+				description: 'Maximum number of matching messages to return',
+			},
+
+			// Memory: Clear Session warning
+			{
+				displayName: 'WARNING: This will permanently delete all messages for the session. This action cannot be undone.',
+				name: 'clearSessionWarning',
+				type: 'notice',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['memory'],
+						operation: ['clearSession'],
+					},
+				},
+			},
+
 			// DATABASE OPERATIONS
 			{
 				displayName: 'Operation',
@@ -1758,6 +1956,67 @@ export class CloudflareD1 implements INodeType {
 							
 						default:
 							throw new NodeOperationError(this.getNode(), `Unknown builder operation: ${operation}`);
+					}
+				} else if (resource === 'memory') {
+					// Handle memory operations
+					const operation = this.getNodeParameter('operation', i) as string;
+					
+					switch (operation) {
+						case 'getChatHistory':
+							const sessionId = this.getNodeParameter('sessionId', i) as string;
+							const messageTypes = this.getNodeParameter('messageTypes', i, ['human', 'ai']) as string[];
+							const memoryLimit = this.getNodeParameter('memoryLimit', i, 50) as number;
+							const sortOrder = this.getNodeParameter('sortOrder', i, 'ASC') as 'ASC' | 'DESC';
+							
+							result = await CloudflareD1Utils.getChatHistory(
+								this,
+								config,
+								sessionId,
+								messageTypes,
+								memoryLimit,
+								sortOrder
+							);
+							break;
+							
+						case 'searchMessages':
+							const searchQuery = this.getNodeParameter('searchQuery', i) as string;
+							const searchSessionId = this.getNodeParameter('searchSessionId', i, '') as string;
+							const searchMessageTypes = this.getNodeParameter('searchMessageTypes', i, ['human', 'ai']) as string[];
+							const searchLimit = this.getNodeParameter('searchLimit', i, 20) as number;
+							
+							result = await CloudflareD1Utils.searchMessages(
+								this,
+								config,
+								searchQuery,
+								searchSessionId || undefined,
+								searchMessageTypes,
+								searchLimit
+							);
+							break;
+							
+						case 'getRecentMessages':
+							const recentSessionId = this.getNodeParameter('sessionId', i) as string;
+							const recentLimit = this.getNodeParameter('memoryLimit', i, 10) as number;
+							
+							result = await CloudflareD1Utils.getRecentMessages(
+								this,
+								config,
+								recentSessionId,
+								recentLimit
+							);
+							break;
+							
+						case 'getSessionList':
+							result = await CloudflareD1Utils.getSessionList(this, config);
+							break;
+							
+						case 'clearSession':
+							const clearSessionId = this.getNodeParameter('sessionId', i) as string;
+							result = await CloudflareD1Utils.clearSession(this, config, clearSessionId);
+							break;
+							
+						default:
+							throw new NodeOperationError(this.getNode(), `Unknown memory operation: ${operation}`);
 					}
 				} else if (resource === 'database') {
 					// Handle database operations

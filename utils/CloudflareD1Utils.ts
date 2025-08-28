@@ -15,7 +15,11 @@ import {
 	D1AggregateQuery,
 	D1DatabaseInfo,
 	D1ExportResult,
-	D1ImportResult
+	D1ImportResult,
+	D1MemoryMessage,
+	D1SessionInfo,
+	D1MemoryOperationResult,
+	D1MemorySearchResult
 } from '../types/CloudflareD1Types';
 
 export class CloudflareD1Utils {
@@ -233,7 +237,7 @@ export class CloudflareD1Utils {
 
 		if (limit) {
 			sql += ` LIMIT ?`;
-			params.push(limit);
+			params.push(limit.toString());
 		}
 
 		if (offset) {
@@ -287,7 +291,7 @@ export class CloudflareD1Utils {
 
 		if (limit) {
 			sql += ` LIMIT ?`;
-			params.push(limit);
+			params.push(limit.toString());
 		}
 
 		return { sql, params };
@@ -946,6 +950,219 @@ export class CloudflareD1Utils {
 		} catch (error) {
 			// Don't throw error for cleanup failures, just log
 			console.warn(`Chat memory cleanup warning: ${error.message}`);
+		}
+	}
+
+	/**
+	 * Get chat history for a session
+	 */
+	static async getChatHistory(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig,
+		sessionId: string,
+		messageTypes: string[] = ['human', 'ai'],
+		limit: number = 50,
+		sortOrder: 'ASC' | 'DESC' = 'ASC'
+	): Promise<D1MemoryOperationResult> {
+		const tableName = 'chat_memory';
+		
+		const typeFilter = messageTypes.length > 0 
+			? `AND message_type IN (${messageTypes.map(() => '?').join(',')})`
+			: '';
+		
+		const sql = `
+			SELECT id, session_id, message_type, content, metadata, timestamp, created_at
+			FROM "${tableName}"
+			WHERE session_id = ? ${typeFilter}
+			ORDER BY timestamp ${sortOrder}
+			LIMIT ?
+		`;
+		
+		const params = [sessionId, ...messageTypes, limit];
+		
+		try {
+			const response = await this.executeQuery(context, config, sql, params);
+			const messages = response.result[0].results as unknown as D1MemoryMessage[];
+			
+			return {
+				success: true,
+				operation: 'getChatHistory',
+				session_id: sessionId,
+				messages,
+				meta: {
+					message_count: messages.length,
+					sort_order: sortOrder,
+					message_types: messageTypes,
+				},
+			};
+		} catch (error) {
+			throw new NodeOperationError(context.getNode(), `Failed to get chat history: ${error.message}`);
+		}
+	}
+
+	/**
+	 * Search messages by content
+	 */
+	static async searchMessages(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig,
+		searchQuery: string,
+		sessionId?: string,
+		messageTypes: string[] = ['human', 'ai'],
+		limit: number = 20
+	): Promise<D1MemoryOperationResult> {
+		const tableName = 'chat_memory';
+		
+		let whereClause = `WHERE content LIKE ?`;
+		const params = [`%${searchQuery}%`];
+		
+		if (sessionId) {
+			whereClause += ` AND session_id = ?`;
+			params.push(sessionId);
+		}
+		
+		if (messageTypes.length > 0) {
+			whereClause += ` AND message_type IN (${messageTypes.map(() => '?').join(',')})`;
+			params.push(...messageTypes);
+		}
+		
+		const sql = `
+			SELECT id, session_id, message_type, content, metadata, timestamp, created_at
+			FROM "${tableName}"
+			${whereClause}
+			ORDER BY timestamp DESC
+			LIMIT ?
+		`;
+		
+		params.push(limit.toString());
+		
+		try {
+			const response = await this.executeQuery(context, config, sql, params);
+			const messages = response.result[0].results as unknown as D1MemoryMessage[];
+			
+			const searchResult: D1MemorySearchResult = {
+				messages,
+				total_matches: messages.length,
+				search_query: searchQuery,
+				session_id: sessionId,
+			};
+			
+			return {
+				success: true,
+				operation: 'searchMessages',
+				search_result: searchResult,
+				meta: {
+					search_query: searchQuery,
+					session_id: sessionId,
+					message_types: messageTypes,
+				},
+			};
+		} catch (error) {
+			throw new NodeOperationError(context.getNode(), `Failed to search messages: ${error.message}`);
+		}
+	}
+
+	/**
+	 * Get recent messages from a session
+	 */
+	static async getRecentMessages(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig,
+		sessionId: string,
+		limit: number = 10
+	): Promise<D1MemoryOperationResult> {
+		const tableName = 'chat_memory';
+		
+		const sql = `
+			SELECT id, session_id, message_type, content, metadata, timestamp, created_at
+			FROM "${tableName}"
+			WHERE session_id = ?
+			ORDER BY timestamp DESC
+			LIMIT ?
+		`;
+		
+		const params = [sessionId, limit];
+		
+		try {
+			const response = await this.executeQuery(context, config, sql, params);
+			const messages = response.result[0].results as unknown as D1MemoryMessage[];
+			
+			return {
+				success: true,
+				operation: 'getRecentMessages',
+				session_id: sessionId,
+				messages,
+				meta: {
+					message_count: messages.length,
+				},
+			};
+		} catch (error) {
+			throw new NodeOperationError(context.getNode(), `Failed to get recent messages: ${error.message}`);
+		}
+	}
+
+	/**
+	 * Get list of all sessions with message counts
+	 */
+	static async getSessionList(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig
+	): Promise<D1MemoryOperationResult> {
+		const tableName = 'chat_memory';
+		
+		const sql = `
+			SELECT 
+				session_id,
+				COUNT(*) as message_count,
+				MIN(timestamp) as first_message_time,
+				MAX(timestamp) as last_message_time
+			FROM "${tableName}"
+			GROUP BY session_id
+			ORDER BY last_message_time DESC
+		`;
+		
+		try {
+			const response = await this.executeQuery(context, config, sql);
+			const sessions = response.result[0].results as unknown as D1SessionInfo[];
+			
+			return {
+				success: true,
+				operation: 'getSessionList',
+				sessions,
+				meta: {
+					session_count: sessions.length,
+				},
+			};
+		} catch (error) {
+			throw new NodeOperationError(context.getNode(), `Failed to get session list: ${error.message}`);
+		}
+	}
+
+	/**
+	 * Clear all messages for a session
+	 */
+	static async clearSession(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig,
+		sessionId: string
+	): Promise<D1MemoryOperationResult> {
+		const tableName = 'chat_memory';
+		
+		const sql = `DELETE FROM "${tableName}" WHERE session_id = ?`;
+		const params = [sessionId];
+		
+		try {
+			const response = await this.executeQuery(context, config, sql, params);
+			
+			return {
+				success: true,
+				operation: 'clearSession',
+				session_id: sessionId,
+				rows_affected: response.result[0].meta?.changes || 0,
+				meta: response.result[0].meta,
+			};
+		} catch (error) {
+			throw new NodeOperationError(context.getNode(), `Failed to clear session: ${error.message}`);
 		}
 	}
 }
