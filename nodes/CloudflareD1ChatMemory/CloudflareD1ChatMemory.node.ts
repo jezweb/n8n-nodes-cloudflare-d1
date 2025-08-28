@@ -64,7 +64,7 @@ export class CloudflareD1ChatMemory implements INodeType {
 				name: 'tableName',
 				type: 'string',
 				default: 'chat_memory',
-				description: 'Name of the table where chat messages will be stored. The table will be created automatically if it doesn\'t exist',
+				description: 'Name of the table where chat messages will be stored. The table will be created automatically if it doesn\'t exist.',
 			},
 			{
 				displayName: 'Max Messages',
@@ -75,7 +75,7 @@ export class CloudflareD1ChatMemory implements INodeType {
 					minValue: 1,
 					maxValue: 1000,
 				},
-				description: 'Maximum number of messages to keep in memory for each session. Older messages will be automatically removed',
+				description: 'Maximum number of messages to keep in memory for each session. Older messages will be automatically removed.',
 			},
 			{
 				displayName: 'Message Expiration (Days)',
@@ -93,7 +93,7 @@ export class CloudflareD1ChatMemory implements INodeType {
 				name: 'memoryKey',
 				type: 'string',
 				default: 'chat_history',
-				description: 'The key to use when storing the memory in the prompt. This is the variable name that will be used in your prompts',
+				description: 'The key to use when storing the memory in the prompt. This is the variable name that will be used in your prompts.',
 			},
 			{
 				displayName: 'Return Messages',
@@ -107,14 +107,14 @@ export class CloudflareD1ChatMemory implements INodeType {
 				name: 'inputKey',
 				type: 'string',
 				default: 'input',
-				description: 'The key to use to get the input from the prompt values. Leave blank to automatically detect',
+				description: 'The key to use to get the input from the prompt values. Leave blank to automatically detect.',
 			},
 			{
 				displayName: 'Output Key',
 				name: 'outputKey',
 				type: 'string',
 				default: 'output',
-				description: 'The key to use to get the output from the model. Leave blank to automatically detect',
+				description: 'The key to use to get the output from the model. Leave blank to automatically detect.',
 			},
 		],
 	};
