@@ -7,11 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned (Phase 2B)
-- Structured database operations (Insert, Select, Update, Delete)
-- Table introspection and schema discovery
-- Visual query builder interface
-- Enhanced AI Agent integration with structured operations
+### Planned (Future)
+- Advanced WHERE clause operators (IN, LIKE, NOT NULL, etc.)
+- ORDER BY support for structured SELECT operations
+- Batch Insert operations via UI
+- Advanced table management features
+
+## [0.2.1] - 2025-08-28
+
+### Added
+- **Structured Database Operations**: Complete PostgreSQL/Supabase-style interface
+  - INSERT: Form-based column/value pairs with validation
+  - SELECT: Column selection, WHERE conditions, LIMIT/pagination
+  - UPDATE: Set columns with WHERE conditions
+  - DELETE: WHERE conditions with optional safety limits
+- **Dynamic Table Introspection**: Live database schema discovery
+  - Searchable table dropdown populated from D1 database
+  - Dynamic column loading based on selected table
+  - Column type information (type, primary key, nullable status)
+- **Resource/Operation Pattern**: Table vs Query resource selection
+- **Enhanced User Experience**: Form validation and helpful error messages
+- **Full AI Agent Compatibility**: Clean structured operations for AI agents
+
+### Improved
+- Node versioning system (now v2)
+- Error handling and validation
+- Parameter binding security
+- Result formatting and metadata
+
+### Technical
+- Static utility methods for query building
+- Comprehensive TypeScript interfaces
+- Table name and column validation
+- Backward compatibility with v0.1.0
 
 ## [0.2.0] - 2025-01-28 (Phase 2A Infrastructure Complete)
 

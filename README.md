@@ -1,9 +1,9 @@
-# n8n Cloudflare D1 Node v0.2.0
+# n8n Cloudflare D1 Node v0.2.1
 
 [![npm version](https://badge.fury.io/js/n8n-nodes-cloudflare-d1.svg)](https://badge.fury.io/js/n8n-nodes-cloudflare-d1)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive n8n community node for integrating with Cloudflare D1, a serverless SQLite-compatible database. Version 0.2.0 includes enhanced infrastructure with chat memory capabilities for AI Agent workflows.
+A comprehensive n8n community node for integrating with Cloudflare D1, a serverless SQLite-compatible database. Version 0.2.1 includes complete structured database operations (Insert, Select, Update, Delete) with PostgreSQL/Supabase-style interfaces, plus chat memory capabilities for AI Agent workflows.
 
 ![Cloudflare D1 Node](https://raw.githubusercontent.com/jezweb/n8n-nodes-cloudflare-d1/main/docs/images/node-preview.png)
 

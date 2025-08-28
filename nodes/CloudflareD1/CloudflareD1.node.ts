@@ -320,6 +320,198 @@ export class CloudflareD1 implements INodeType {
 				],
 			},
 
+			// UPDATE FIELDS
+			{
+				displayName: 'Update Columns',
+				name: 'updateFields',
+				placeholder: 'Add Column',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				displayOptions: {
+					show: {
+						resource: ['table'],
+						operation: ['update'],
+					},
+				},
+				default: {},
+				options: [
+					{
+						name: 'property',
+						displayName: 'Column',
+						values: [
+							{
+								displayName: 'Name',
+								name: 'name',
+								type: 'options',
+								typeOptions: {
+									loadOptionsDependsOn: ['table'],
+									loadOptionsMethod: 'getTableColumns',
+								},
+								default: '',
+								required: true,
+								description: 'Name of the column to update',
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								default: '',
+								description: 'New value for the column',
+							},
+						],
+					},
+				],
+				description: 'The columns to update and their new values',
+			},
+			{
+				displayName: 'WHERE Conditions',
+				name: 'whereUpdate',
+				placeholder: 'Add Condition',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				displayOptions: {
+					show: {
+						resource: ['table'],
+						operation: ['update'],
+					},
+				},
+				default: {},
+				options: [
+					{
+						name: 'condition',
+						displayName: 'Condition',
+						values: [
+							{
+								displayName: 'Column',
+								name: 'column',
+								type: 'options',
+								typeOptions: {
+									loadOptionsDependsOn: ['table'],
+									loadOptionsMethod: 'getTableColumns',
+								},
+								default: '',
+								required: true,
+							},
+							{
+								displayName: 'Operator',
+								name: 'operator',
+								type: 'options',
+								options: [
+									{ name: 'Equals', value: '=' },
+									{ name: 'Not Equals', value: '!=' },
+									{ name: 'Greater Than', value: '>' },
+									{ name: 'Less Than', value: '<' },
+									{ name: 'Like', value: 'LIKE' },
+									{ name: 'In', value: 'IN' },
+									{ name: 'Is Null', value: 'IS NULL' },
+									{ name: 'Is Not Null', value: 'IS NOT NULL' },
+								],
+								default: '=',
+								required: true,
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								displayOptions: {
+									hide: {
+										operator: ['IS NULL', 'IS NOT NULL'],
+									},
+								},
+								default: '',
+								description: 'Value to compare against',
+							},
+						],
+					},
+				],
+			},
+
+			// DELETE FIELDS
+			{
+				displayName: 'WHERE Conditions',
+				name: 'whereDelete',
+				placeholder: 'Add Condition',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				displayOptions: {
+					show: {
+						resource: ['table'],
+						operation: ['delete'],
+					},
+				},
+				default: {},
+				options: [
+					{
+						name: 'condition',
+						displayName: 'Condition',
+						values: [
+							{
+								displayName: 'Column',
+								name: 'column',
+								type: 'options',
+								typeOptions: {
+									loadOptionsDependsOn: ['table'],
+									loadOptionsMethod: 'getTableColumns',
+								},
+								default: '',
+								required: true,
+							},
+							{
+								displayName: 'Operator',
+								name: 'operator',
+								type: 'options',
+								options: [
+									{ name: 'Equals', value: '=' },
+									{ name: 'Not Equals', value: '!=' },
+									{ name: 'Greater Than', value: '>' },
+									{ name: 'Less Than', value: '<' },
+									{ name: 'Like', value: 'LIKE' },
+									{ name: 'In', value: 'IN' },
+									{ name: 'Is Null', value: 'IS NULL' },
+									{ name: 'Is Not Null', value: 'IS NOT NULL' },
+								],
+								default: '=',
+								required: true,
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								displayOptions: {
+									hide: {
+										operator: ['IS NULL', 'IS NOT NULL'],
+									},
+								},
+								default: '',
+								description: 'Value to compare against',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Limit',
+				name: 'deleteLimit',
+				type: 'number',
+				displayOptions: {
+					show: {
+						resource: ['table'],
+						operation: ['delete'],
+					},
+				},
+				typeOptions: {
+					minValue: 1,
+				},
+				default: '',
+				description: 'Maximum number of rows to delete (optional safety limit)',
+			},
+
 			// QUERY OPERATIONS  
 			{
 				displayName: 'Operation',
@@ -560,8 +752,68 @@ export class CloudflareD1 implements INodeType {
 							};
 							break;
 
+						case 'update':
+							const updateFields = this.getNodeParameter('updateFields.property', i, []) as Array<{name: string, value: any}>;
+							const whereUpdateConditions = this.getNodeParameter('whereUpdate.condition', i, []) as Array<{column: string, operator: string, value: any}>;
+							
+							if (updateFields.length === 0) {
+								throw new NodeOperationError(this.getNode(), 'At least one column must be specified for update');
+							}
+
+							const updateData: IDataObject = {};
+							for (const field of updateFields) {
+								if (!field.name) {
+									throw new NodeOperationError(this.getNode(), 'Column name cannot be empty');
+								}
+								updateData[field.name] = field.value;
+							}
+
+							// Build WHERE clause (simplified - only equals for now)
+							const whereUpdate: IDataObject = {};
+							for (const condition of whereUpdateConditions) {
+								if (condition.operator === '=' && condition.value !== undefined) {
+									whereUpdate[condition.column] = condition.value;
+								}
+							}
+
+							const { sql: updateSql, params: updateParams } = CloudflareD1Utils.buildUpdateQuery(tableName, updateData, whereUpdate);
+							const updateResponse = await CloudflareD1Utils.executeQuery(this, config, updateSql, updateParams);
+							
+							result = {
+								success: updateResponse.result[0].success,
+								results: updateResponse.result[0].results,
+								meta: updateResponse.result[0].meta,
+								rowsWritten: updateResponse.result[0].meta?.rows_written || 0,
+								changes: updateResponse.result[0].meta?.changes || 0,
+							};
+							break;
+
+						case 'delete':
+							const whereDeleteConditions = this.getNodeParameter('whereDelete.condition', i, []) as Array<{column: string, operator: string, value: any}>;
+							const deleteLimit = this.getNodeParameter('deleteLimit', i) as number | undefined;
+
+							// Build WHERE clause (simplified - only equals for now)
+							const whereDelete: IDataObject = {};
+							for (const condition of whereDeleteConditions) {
+								if (condition.operator === '=' && condition.value !== undefined) {
+									whereDelete[condition.column] = condition.value;
+								}
+							}
+
+							const { sql: deleteSql, params: deleteParams } = CloudflareD1Utils.buildDeleteQuery(tableName, whereDelete, deleteLimit);
+							const deleteResponse = await CloudflareD1Utils.executeQuery(this, config, deleteSql, deleteParams);
+							
+							result = {
+								success: deleteResponse.result[0].success,
+								results: deleteResponse.result[0].results,
+								meta: deleteResponse.result[0].meta,
+								rowsWritten: deleteResponse.result[0].meta?.rows_written || 0,
+								changes: deleteResponse.result[0].meta?.changes || 0,
+							};
+							break;
+
 						default:
-							throw new NodeOperationError(this.getNode(), `Table operation "${operation}" not yet implemented in this version. Use Query resource for now.`);
+							throw new NodeOperationError(this.getNode(), `Unknown table operation: ${operation}`);
 					}
 				} else {
 					// Handle query operations
