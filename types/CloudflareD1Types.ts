@@ -88,9 +88,12 @@ export interface D1QueryResult {
 // Chat memory types for sub-node
 export interface D1ChatMessage {
 	id?: number;
-	session_id: string;
-	message_type: 'human' | 'ai' | 'system';
-	message: string;
+	sessionId?: string;
+	session_id?: string; // Keep for backward compatibility
+	type: 'human' | 'ai' | 'system';
+	message_type?: 'human' | 'ai' | 'system'; // Keep for backward compatibility  
+	content: string;
+	message?: string; // Keep for backward compatibility
 	metadata?: IDataObject;
 	timestamp?: string;
 }

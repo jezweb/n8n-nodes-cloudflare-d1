@@ -5,7 +5,9 @@ import {
 	D1ApiResponse, 
 	D1TableInfo, 
 	D1ColumnInfo,
-	D1TableSchema 
+	D1TableSchema,
+	D1ChatMessage,
+	D1ChatMemoryConfig
 } from '../types/CloudflareD1Types';
 
 export class CloudflareD1Utils {
@@ -328,5 +330,196 @@ export class CloudflareD1Utils {
 			apiEndpoint: credentials.apiEndpoint as string,
 			databaseId: '', // Will be set per operation
 		};
+	}
+
+	// ===== Chat Memory Utility Methods =====
+
+	/**
+	 * Ensure chat memory table exists
+	 */
+	static async ensureChatMemoryTable(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig,
+		tableName: string
+	): Promise<void> {
+		const createTableSQL = `
+			CREATE TABLE IF NOT EXISTS "${tableName}" (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				session_id TEXT NOT NULL,
+				message_type TEXT NOT NULL CHECK (message_type IN ('human', 'ai', 'system')),
+				content TEXT NOT NULL,
+				metadata JSON,
+				timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			);
+			CREATE INDEX IF NOT EXISTS idx_${tableName}_session_timestamp ON "${tableName}" (session_id, timestamp);
+		`;
+
+		await this.executeQuery(context, config, createTableSQL);
+	}
+
+	/**
+	 * Store a chat message
+	 */
+	static async storeChatMessage(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig,
+		memoryConfig: D1ChatMemoryConfig,
+		message: D1ChatMessage
+	): Promise<void> {
+		const tableName = memoryConfig.tableName || 'chat_memory';
+		
+		const insertSQL = `
+			INSERT INTO "${tableName}" (session_id, message_type, content, metadata, timestamp)
+			VALUES (?, ?, ?, ?, ?)
+		`;
+		
+		const timestamp = message.timestamp || new Date().toISOString();
+		const metadata = message.metadata ? JSON.stringify(message.metadata) : null;
+		
+		const params = [
+			memoryConfig.sessionId,
+			message.type,
+			message.content,
+			metadata,
+			timestamp,
+		];
+
+		await this.executeQuery(context, config, insertSQL, params);
+	}
+
+	/**
+	 * Get chat messages for a session
+	 */
+	static async getChatMessages(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig,
+		memoryConfig: D1ChatMemoryConfig
+	): Promise<D1ChatMessage[]> {
+		const tableName = memoryConfig.tableName || 'chat_memory';
+		const limit = memoryConfig.maxMessages || 100;
+
+		const selectSQL = `
+			SELECT id, session_id, message_type, content, metadata, timestamp
+			FROM "${tableName}"
+			WHERE session_id = ?
+			ORDER BY timestamp ASC
+			LIMIT ?
+		`;
+
+		const params = [memoryConfig.sessionId, limit];
+
+		try {
+			const response = await this.executeQuery(context, config, selectSQL, params);
+			const result = response.result[0];
+
+			if (!result.success) {
+				throw new Error(`Failed to get messages: ${result.error}`);
+			}
+
+			return result.results.map((row: any) => ({
+				id: row.id,
+				sessionId: row.session_id,
+				type: row.message_type as 'human' | 'ai' | 'system',
+				content: row.content,
+				metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
+				timestamp: row.timestamp,
+			}));
+		} catch (error) {
+			console.error('Error getting chat messages:', error);
+			return [];
+		}
+	}
+
+	/**
+	 * Get chat message count for a session
+	 */
+	static async getChatMessageCount(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig,
+		memoryConfig: D1ChatMemoryConfig
+	): Promise<number> {
+		const tableName = memoryConfig.tableName || 'chat_memory';
+
+		const countSQL = `
+			SELECT COUNT(*) as count
+			FROM "${tableName}"
+			WHERE session_id = ?
+		`;
+
+		const params = [memoryConfig.sessionId];
+
+		try {
+			const response = await this.executeQuery(context, config, countSQL, params);
+			const result = response.result[0];
+
+			if (!result.success || !result.results.length) {
+				return 0;
+			}
+
+			return result.results[0].count as number;
+		} catch (error) {
+			console.error('Error getting message count:', error);
+			return 0;
+		}
+	}
+
+	/**
+	 * Clear all messages for a session
+	 */
+	static async clearChatSession(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig,
+		memoryConfig: D1ChatMemoryConfig
+	): Promise<void> {
+		const tableName = memoryConfig.tableName || 'chat_memory';
+
+		const deleteSQL = `DELETE FROM "${tableName}" WHERE session_id = ?`;
+		const params = [memoryConfig.sessionId];
+
+		await this.executeQuery(context, config, deleteSQL, params);
+	}
+
+	/**
+	 * Clean up old messages based on max count and expiration
+	 */
+	static async cleanupChatMessages(
+		context: IExecuteFunctions,
+		config: D1ConnectionConfig,
+		memoryConfig: D1ChatMemoryConfig
+	): Promise<void> {
+		const tableName = memoryConfig.tableName || 'chat_memory';
+		const maxMessages = memoryConfig.maxMessages || 100;
+		const expirationDays = memoryConfig.expirationDays || 30;
+
+		// Remove messages older than expiration date
+		const expiredCleanupSQL = `
+			DELETE FROM "${tableName}"
+			WHERE session_id = ?
+			AND timestamp < datetime('now', '-${expirationDays} days')
+		`;
+
+		// Remove excess messages (keep only the most recent ones)
+		const excessCleanupSQL = `
+			DELETE FROM "${tableName}"
+			WHERE session_id = ?
+			AND id NOT IN (
+				SELECT id FROM "${tableName}"
+				WHERE session_id = ?
+				ORDER BY timestamp DESC
+				LIMIT ?
+			)
+		`;
+
+		try {
+			// Run both cleanup operations
+			await this.executeBatch(context, config, [
+				{ sql: expiredCleanupSQL, params: [memoryConfig.sessionId] },
+				{ sql: excessCleanupSQL, params: [memoryConfig.sessionId, memoryConfig.sessionId, maxMessages] },
+			]);
+		} catch (error) {
+			// Don't throw error for cleanup failures, just log
+			console.warn(`Chat memory cleanup warning: ${error.message}`);
+		}
 	}
 }

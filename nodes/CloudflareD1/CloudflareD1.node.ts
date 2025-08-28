@@ -179,7 +179,7 @@ export class CloudflareD1 implements INodeType {
 						displayName: 'Column',
 						values: [
 							{
-								displayName: 'Name',
+								displayName: 'Name or ID',
 								name: 'name',
 								type: 'options',
 								typeOptions: {
@@ -188,7 +188,7 @@ export class CloudflareD1 implements INodeType {
 								},
 								default: '',
 								required: true,
-								description: 'Name of the column',
+								description: 'Name of the column. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 							},
 							{
 								displayName: 'Value',
@@ -215,7 +215,7 @@ export class CloudflareD1 implements INodeType {
 					},
 				},
 				default: false,
-				description: 'Whether to return all results or limit the number of results',
+				description: 'Whether to return all results or only up to a given limit',
 			},
 			{
 				displayName: 'Limit',
@@ -232,10 +232,10 @@ export class CloudflareD1 implements INodeType {
 					minValue: 1,
 				},
 				default: 50,
-				description: 'Maximum number of results to return',
+				description: 'Max number of results to return',
 			},
 			{
-				displayName: 'Select Columns',
+				displayName: 'Select Column Names or IDs',
 				name: 'columns',
 				type: 'multiOptions',
 				displayOptions: {
@@ -249,7 +249,7 @@ export class CloudflareD1 implements INodeType {
 					loadOptionsMethod: 'getTableColumns',
 				},
 				default: [],
-				description: 'Columns to select. Leave empty to select all columns (*).',
+				description: 'Columns to select. Leave empty to select all columns (*). Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'WHERE Conditions',
@@ -272,9 +272,10 @@ export class CloudflareD1 implements INodeType {
 						displayName: 'Condition',
 						values: [
 							{
-								displayName: 'Column',
+								displayName: 'Column Name or ID',
 								name: 'column',
 								type: 'options',
+								description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 								typeOptions: {
 									loadOptionsDependsOn: ['table'],
 									loadOptionsMethod: 'getTableColumns',
@@ -288,17 +289,17 @@ export class CloudflareD1 implements INodeType {
 								type: 'options',
 								options: [
 									{ name: 'Equals', value: '=' },
-									{ name: 'Not Equals', value: '!=' },
 									{ name: 'Greater Than', value: '>' },
 									{ name: 'Greater Than or Equal', value: '>=' },
+									{ name: 'In', value: 'IN' },
+									{ name: 'Is Not Null', value: 'IS NOT NULL' },
+									{ name: 'Is Null', value: 'IS NULL' },
 									{ name: 'Less Than', value: '<' },
 									{ name: 'Less Than or Equal', value: '<=' },
 									{ name: 'Like', value: 'LIKE' },
-									{ name: 'Not Like', value: 'NOT LIKE' },
-									{ name: 'In', value: 'IN' },
+									{ name: 'Not Equals', value: '!=' },
 									{ name: 'Not In', value: 'NOT IN' },
-									{ name: 'Is Null', value: 'IS NULL' },
-									{ name: 'Is Not Null', value: 'IS NOT NULL' },
+									{ name: 'Not Like', value: 'NOT LIKE' },
 								],
 								default: '=',
 								required: true,
@@ -342,7 +343,7 @@ export class CloudflareD1 implements INodeType {
 						displayName: 'Column',
 						values: [
 							{
-								displayName: 'Name',
+								displayName: 'Name or ID',
 								name: 'name',
 								type: 'options',
 								typeOptions: {
@@ -351,7 +352,7 @@ export class CloudflareD1 implements INodeType {
 								},
 								default: '',
 								required: true,
-								description: 'Name of the column to update',
+								description: 'Name of the column to update. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 							},
 							{
 								displayName: 'Value',
@@ -386,9 +387,10 @@ export class CloudflareD1 implements INodeType {
 						displayName: 'Condition',
 						values: [
 							{
-								displayName: 'Column',
+								displayName: 'Column Name or ID',
 								name: 'column',
 								type: 'options',
+								description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 								typeOptions: {
 									loadOptionsDependsOn: ['table'],
 									loadOptionsMethod: 'getTableColumns',
@@ -402,13 +404,13 @@ export class CloudflareD1 implements INodeType {
 								type: 'options',
 								options: [
 									{ name: 'Equals', value: '=' },
-									{ name: 'Not Equals', value: '!=' },
 									{ name: 'Greater Than', value: '>' },
+									{ name: 'In', value: 'IN' },
+									{ name: 'Is Not Null', value: 'IS NOT NULL' },
+									{ name: 'Is Null', value: 'IS NULL' },
 									{ name: 'Less Than', value: '<' },
 									{ name: 'Like', value: 'LIKE' },
-									{ name: 'In', value: 'IN' },
-									{ name: 'Is Null', value: 'IS NULL' },
-									{ name: 'Is Not Null', value: 'IS NOT NULL' },
+									{ name: 'Not Equals', value: '!=' },
 								],
 								default: '=',
 								required: true,
@@ -452,9 +454,10 @@ export class CloudflareD1 implements INodeType {
 						displayName: 'Condition',
 						values: [
 							{
-								displayName: 'Column',
+								displayName: 'Column Name or ID',
 								name: 'column',
 								type: 'options',
+								description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 								typeOptions: {
 									loadOptionsDependsOn: ['table'],
 									loadOptionsMethod: 'getTableColumns',
@@ -468,13 +471,13 @@ export class CloudflareD1 implements INodeType {
 								type: 'options',
 								options: [
 									{ name: 'Equals', value: '=' },
-									{ name: 'Not Equals', value: '!=' },
 									{ name: 'Greater Than', value: '>' },
+									{ name: 'In', value: 'IN' },
+									{ name: 'Is Not Null', value: 'IS NOT NULL' },
+									{ name: 'Is Null', value: 'IS NULL' },
 									{ name: 'Less Than', value: '<' },
 									{ name: 'Like', value: 'LIKE' },
-									{ name: 'In', value: 'IN' },
-									{ name: 'Is Null', value: 'IS NULL' },
-									{ name: 'Is Not Null', value: 'IS NOT NULL' },
+									{ name: 'Not Equals', value: '!=' },
 								],
 								default: '=',
 								required: true,
@@ -613,7 +616,7 @@ export class CloudflareD1 implements INodeType {
 					},
 				},
 				description: 'Raw SQL commands to execute. Use with caution - no parameter binding is performed.',
-				placeholder: 'CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT);',
+				placeholder: 'CREATE TABLE users (ID INTEGER PRIMARY KEY, name TEXT);',
 			},
 		],
 	};
