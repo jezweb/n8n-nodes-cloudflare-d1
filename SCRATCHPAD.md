@@ -1,6 +1,6 @@
 # n8n Cloudflare D1 Node Development Scratchpad
 
-## Current Status: 🚧 ENHANCING WITH STRUCTURED OPERATIONS
+## Current Status: 🚧 ADDING TABLE MANAGEMENT & QUERY TOOLS (v0.4.0)
 
 ### Phase 1: Basic Implementation ✅ COMPLETED
 - ✅ Cloned n8n-nodes-starter template
@@ -169,3 +169,72 @@ types/
 - LangChain integration must follow n8n's memory sub-node standards
 - All structured operations must support n8n's data mapping interface
 - Chat memory must support session management and expiration
+
+---
+
+## Phase 3: Table Management & Query Tools (v0.4.0) - 2025-01-28
+
+### Implementation Plan:
+
+#### 3A: Table Management Operations 🚧 IN PROGRESS
+- [ ] Create Table - Visual table builder with columns and constraints
+- [ ] List Tables - Get all tables in database
+- [ ] Get Table Schema - View table structure
+- [ ] Drop Table - Safe table deletion
+- [ ] Alter Table - Modify table structure
+
+#### 3B: Query Builder Tools ⏳ PENDING
+- [ ] Query Builder - Visual SELECT query builder
+- [ ] Aggregate Query - SUM, COUNT, AVG operations
+- [ ] Search Records - Full-text search
+- [ ] Get Distinct Values - Unique column values
+- [ ] Table Statistics - Row counts and info
+
+#### 3C: Database Management ⏳ PENDING
+- [ ] Export Database - Export to SQL file
+- [ ] Import Database - Import SQL file
+- [ ] Get Database Info - Size, created date
+- [ ] List Databases - All D1 databases
+
+#### 3D: Enhanced Existing Operations ⏳ PENDING
+- [ ] Enhanced Insert - Create table if not exists
+- [ ] Enhanced Select - JOIN support
+- [ ] Enhanced Batch - Transaction control
+
+### Technical Details:
+
+#### New Resource Types:
+- 'table' - Table management operations
+- 'query' - Query operations (existing)
+- 'builder' - Query builder tools
+- 'database' - Database management
+
+#### New Type Definitions Needed:
+```typescript
+interface D1TableColumn {
+  name: string;
+  type: 'TEXT' | 'INTEGER' | 'REAL' | 'BLOB' | 'BOOLEAN' | 'DATETIME';
+  constraints?: {
+    primaryKey?: boolean;
+    notNull?: boolean;
+    unique?: boolean;
+    defaultValue?: any;
+  };
+}
+
+interface D1QueryBuilder {
+  table: string;
+  columns?: string[];
+  where?: Array<{field: string; operator: string; value: any}>;
+  joins?: Array<{type: string; table: string; on: string}>;
+  groupBy?: string[];
+  orderBy?: Array<{field: string; direction: 'ASC' | 'DESC'}>;
+  limit?: number;
+  offset?: number;
+}
+```
+
+### Progress Log:
+- 2025-01-28 10:00 - Started Phase 3 implementation
+- 2025-01-28 10:15 - Created detailed SCRATCHPAD plan
+- 2025-01-28 10:20 - Starting CloudflareD1Types.ts updates
