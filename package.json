@@ -1,19 +1,26 @@
 {
-  "name": "n8n-nodes-<...>",
+  "name": "n8n-nodes-cloudflare-d1",
   "version": "0.1.0",
-  "description": "",
+  "description": "n8n community node for Cloudflare D1 serverless database integration, supporting SQL queries, batch operations, and AI Agent compatibility",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "cloudflare",
+    "d1",
+    "database",
+    "sql",
+    "serverless",
+    "ai-tools"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/jezweb/n8n-nodes-cloudflare-d1#readme",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "Jez (Jeremy Dawes)",
+    "email": "jeremy@jezweb.net",
+    "url": "https://www.jezweb.com.au"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/<...>/n8n-nodes-<...>.git"
+    "url": "https://github.com/jezweb/n8n-nodes-cloudflare-d1.git"
   },
   "engines": {
     "node": ">=20.15"
@@ -33,12 +40,10 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/ExampleCredentialsApi.credentials.js",
-      "dist/credentials/HttpBinApi.credentials.js"
+      "dist/credentials/CloudflareD1Api.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/CloudflareD1/CloudflareD1.node.js"
     ]
   },
   "devDependencies": {
