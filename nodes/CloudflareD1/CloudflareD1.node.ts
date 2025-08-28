@@ -14,7 +14,10 @@ import {
 	D1Operation, 
 	D1Resource,
 	D1TableInfo,
-	D1ColumnInfo 
+	D1ColumnInfo,
+	D1AggregateQuery,
+	D1WhereOperator,
+	D1AggregateFunction
 } from '../../types/CloudflareD1Types';
 
 export class CloudflareD1 implements INodeType {
@@ -60,9 +63,24 @@ export class CloudflareD1 implements INodeType {
 						description: 'Work with database tables using structured operations (Insert, Select, Update, Delete)',
 					},
 					{
+						name: 'Table Management',
+						value: 'tableManagement',
+						description: 'Create, alter, and manage table schemas',
+					},
+					{
 						name: 'Query',
 						value: 'query',
 						description: 'Execute raw SQL queries with full flexibility',
+					},
+					{
+						name: 'Query Builder',
+						value: 'builder',
+						description: 'Build queries visually without writing SQL',
+					},
+					{
+						name: 'Database',
+						value: 'database',
+						description: 'Database-level operations (export, import, info)',
 					},
 				],
 				default: 'table',
@@ -515,6 +533,281 @@ export class CloudflareD1 implements INodeType {
 				description: 'Maximum number of rows to delete (optional safety limit)',
 			},
 
+			// TABLE MANAGEMENT OPERATIONS
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['tableManagement'],
+					},
+				},
+				options: [
+					{
+						name: 'Create Table',
+						value: 'createTable',
+						description: 'Create a new table with columns and constraints',
+						action: 'Create a new table',
+					},
+					{
+						name: 'List Tables',
+						value: 'listTables',
+						description: 'Get a list of all tables in the database',
+						action: 'List all tables',
+					},
+					{
+						name: 'Get Table Schema',
+						value: 'getTableSchema',
+						description: 'Get detailed schema information for a table',
+						action: 'Get table schema',
+					},
+					{
+						name: 'Drop Table',
+						value: 'dropTable',
+						description: 'Delete a table and all its data',
+						action: 'Drop a table',
+					},
+				],
+				default: 'createTable',
+				noDataExpression: true,
+			},
+
+			// CREATE TABLE FIELDS
+			{
+				displayName: 'Table Name',
+				name: 'createTableName',
+				type: 'string',
+				displayOptions: {
+					show: {
+						resource: ['tableManagement'],
+						operation: ['createTable'],
+					},
+				},
+				default: '',
+				required: true,
+				placeholder: 'users',
+				description: 'Name for the new table',
+			},
+			{
+				displayName: 'Columns',
+				name: 'columns',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+					minValue: 1,
+				},
+				displayOptions: {
+					show: {
+						resource: ['tableManagement'],
+						operation: ['createTable'],
+					},
+				},
+				default: {},
+				placeholder: 'Add Column',
+				options: [
+					{
+						name: 'column',
+						displayName: 'Column',
+						values: [
+							{
+								displayName: 'Name',
+								name: 'name',
+								type: 'string',
+								default: '',
+								required: true,
+								placeholder: 'column_name',
+								description: 'Name of the column',
+							},
+							{
+								displayName: 'Type',
+								name: 'type',
+								type: 'options',
+								options: [
+									{ name: 'Text', value: 'TEXT' },
+									{ name: 'Integer', value: 'INTEGER' },
+									{ name: 'Real (Float)', value: 'REAL' },
+									{ name: 'Blob (Binary)', value: 'BLOB' },
+									{ name: 'Boolean', value: 'BOOLEAN' },
+									{ name: 'Date/Time', value: 'DATETIME' },
+									{ name: 'JSON', value: 'JSON' },
+								],
+								default: 'TEXT',
+								description: 'Data type for the column',
+							},
+							{
+								displayName: 'Primary Key',
+								name: 'primaryKey',
+								type: 'boolean',
+								default: false,
+								description: 'Whether this column is a primary key',
+							},
+							{
+								displayName: 'Auto Increment',
+								name: 'autoIncrement',
+								type: 'boolean',
+								displayOptions: {
+									show: {
+										type: ['INTEGER'],
+										primaryKey: [true],
+									},
+								},
+								default: false,
+								description: 'Whether to auto-increment this integer primary key',
+							},
+							{
+								displayName: 'Not Null',
+								name: 'notNull',
+								type: 'boolean',
+								default: false,
+								description: 'Whether this column must have a value',
+							},
+							{
+								displayName: 'Unique',
+								name: 'unique',
+								type: 'boolean',
+								default: false,
+								description: 'Whether values in this column must be unique',
+							},
+							{
+								displayName: 'Default Value',
+								name: 'defaultValue',
+								type: 'string',
+								default: '',
+								description: 'Default value for the column (leave empty for no default)',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Options',
+				name: 'createTableOptions',
+				type: 'collection',
+				placeholder: 'Add Option',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['tableManagement'],
+						operation: ['createTable'],
+					},
+				},
+				options: [
+					{
+						displayName: 'If Not Exists',
+						name: 'ifNotExists',
+						type: 'boolean',
+						default: true,
+						description: 'Whether to create the table only if it doesn\'t already exist',
+					},
+					{
+						displayName: 'Without Row ID',
+						name: 'withoutRowId',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to create the table without ROWID (optimization for certain use cases)',
+					},
+					{
+						displayName: 'Strict Mode',
+						name: 'strict',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to enforce strict typing (SQLite 3.37.0+)',
+					},
+				],
+			},
+
+			// GET TABLE SCHEMA FIELDS
+			{
+				displayName: 'Table',
+				name: 'schemaTable',
+				type: 'resourceLocator',
+				default: { mode: 'list', value: '' },
+				displayOptions: {
+					show: {
+						resource: ['tableManagement'],
+						operation: ['getTableSchema'],
+					},
+				},
+				modes: [
+					{
+						displayName: 'From List',
+						name: 'list',
+						type: 'list',
+						typeOptions: {
+							searchListMethod: 'tableSearch',
+							searchable: true,
+						},
+					},
+					{
+						displayName: 'Name',
+						name: 'name',
+						type: 'string',
+						placeholder: 'table_name',
+					},
+				],
+				required: true,
+				description: 'The table to get schema information for',
+			},
+
+			// DROP TABLE FIELDS
+			{
+				displayName: 'Table',
+				name: 'dropTable',
+				type: 'resourceLocator',
+				default: { mode: 'list', value: '' },
+				displayOptions: {
+					show: {
+						resource: ['tableManagement'],
+						operation: ['dropTable'],
+					},
+				},
+				modes: [
+					{
+						displayName: 'From List',
+						name: 'list',
+						type: 'list',
+						typeOptions: {
+							searchListMethod: 'tableSearch',
+							searchable: true,
+						},
+					},
+					{
+						displayName: 'Name',
+						name: 'name',
+						type: 'string',
+						placeholder: 'table_name',
+					},
+				],
+				required: true,
+				description: 'The table to drop',
+			},
+			{
+				displayName: 'If Exists',
+				name: 'dropIfExists',
+				type: 'boolean',
+				default: true,
+				displayOptions: {
+					show: {
+						resource: ['tableManagement'],
+						operation: ['dropTable'],
+					},
+				},
+				description: 'Whether to drop the table only if it exists (prevents errors)',
+			},
+			{
+				displayName: 'WARNING: This will permanently delete the table and all its data. This action cannot be undone.',
+				name: 'dropTableWarning',
+				type: 'notice',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['tableManagement'],
+						operation: ['dropTable'],
+					},
+				},
+			},
+
 			// QUERY OPERATIONS  
 			{
 				displayName: 'Operation',
@@ -617,6 +910,405 @@ export class CloudflareD1 implements INodeType {
 				},
 				description: 'Raw SQL commands to execute. Use with caution - no parameter binding is performed.',
 				placeholder: 'CREATE TABLE users (ID INTEGER PRIMARY KEY, name TEXT);',
+			},
+
+			// QUERY BUILDER OPERATIONS
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+					},
+				},
+				options: [
+					{
+						name: 'Query Builder',
+						value: 'queryBuilder',
+						description: 'Build a SELECT query visually',
+						action: 'Build SELECT query',
+					},
+					{
+						name: 'Aggregate Query',
+						value: 'aggregateQuery',
+						description: 'Build aggregation queries (COUNT, SUM, AVG, etc.)',
+						action: 'Build aggregate query',
+					},
+					{
+						name: 'Get Distinct Values',
+						value: 'getDistinctValues',
+						description: 'Get unique values from a column',
+						action: 'Get distinct values',
+					},
+					{
+						name: 'Table Statistics',
+						value: 'tableStatistics',
+						description: 'Get statistics about a table',
+						action: 'Get table statistics',
+					},
+				],
+				default: 'queryBuilder',
+				noDataExpression: true,
+			},
+
+			// QUERY BUILDER FIELDS
+			{
+				displayName: 'Table',
+				name: 'builderTable',
+				type: 'resourceLocator',
+				default: { mode: 'list', value: '' },
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+						operation: ['queryBuilder', 'aggregateQuery', 'getDistinctValues', 'tableStatistics'],
+					},
+				},
+				modes: [
+					{
+						displayName: 'From List',
+						name: 'list',
+						type: 'list',
+						typeOptions: {
+							searchListMethod: 'tableSearch',
+							searchable: true,
+						},
+					},
+					{
+						displayName: 'Name',
+						name: 'name',
+						type: 'string',
+						placeholder: 'table_name',
+					},
+				],
+				required: true,
+				description: 'The table to query',
+			},
+
+			// Query Builder specific fields
+			{
+				displayName: 'Columns',
+				name: 'queryColumns',
+				type: 'multiOptions',
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+						operation: ['queryBuilder'],
+					},
+				},
+				typeOptions: {
+					loadOptionsDependsOn: ['builderTable'],
+					loadOptionsMethod: 'getTableColumns',
+				},
+				default: [],
+				description: 'Columns to select (leave empty for all)',
+			},
+			{
+				displayName: 'Where Conditions',
+				name: 'whereConditions',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+						operation: ['queryBuilder', 'aggregateQuery'],
+					},
+				},
+				default: {},
+				placeholder: 'Add Condition',
+				options: [
+					{
+						name: 'condition',
+						displayName: 'Condition',
+						values: [
+							{
+								displayName: 'Field',
+								name: 'field',
+								type: 'options',
+								typeOptions: {
+									loadOptionsDependsOn: ['builderTable'],
+									loadOptionsMethod: 'getTableColumns',
+								},
+								default: '',
+								required: true,
+								description: 'Field to filter on',
+							},
+							{
+								displayName: 'Operator',
+								name: 'operator',
+								type: 'options',
+								options: [
+									{ name: 'Equals', value: '=' },
+									{ name: 'Not Equals', value: '!=' },
+									{ name: 'Greater Than', value: '>' },
+									{ name: 'Less Than', value: '<' },
+									{ name: 'Greater or Equal', value: '>=' },
+									{ name: 'Less or Equal', value: '<=' },
+									{ name: 'Like', value: 'LIKE' },
+									{ name: 'Not Like', value: 'NOT LIKE' },
+									{ name: 'In', value: 'IN' },
+									{ name: 'Not In', value: 'NOT IN' },
+									{ name: 'Is Null', value: 'IS NULL' },
+									{ name: 'Is Not Null', value: 'IS NOT NULL' },
+									{ name: 'Between', value: 'BETWEEN' },
+								],
+								default: '=',
+								description: 'Comparison operator',
+							},
+							{
+								displayName: 'Value',
+								name: 'value',
+								type: 'string',
+								displayOptions: {
+									hide: {
+										operator: ['IS NULL', 'IS NOT NULL'],
+									},
+								},
+								default: '',
+								description: 'Value to compare (for IN operator, use comma-separated values)',
+							},
+							{
+								displayName: 'Value 2',
+								name: 'value2',
+								type: 'string',
+								displayOptions: {
+									show: {
+										operator: ['BETWEEN'],
+									},
+								},
+								default: '',
+								description: 'Second value for BETWEEN operator',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Order By',
+				name: 'orderBy',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+						operation: ['queryBuilder'],
+					},
+				},
+				default: {},
+				placeholder: 'Add Sort',
+				options: [
+					{
+						name: 'sort',
+						displayName: 'Sort',
+						values: [
+							{
+								displayName: 'Field',
+								name: 'field',
+								type: 'options',
+								typeOptions: {
+									loadOptionsDependsOn: ['builderTable'],
+									loadOptionsMethod: 'getTableColumns',
+								},
+								default: '',
+								required: true,
+								description: 'Field to sort by',
+							},
+							{
+								displayName: 'Direction',
+								name: 'direction',
+								type: 'options',
+								options: [
+									{ name: 'Ascending', value: 'ASC' },
+									{ name: 'Descending', value: 'DESC' },
+								],
+								default: 'ASC',
+								description: 'Sort direction',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Limit',
+				name: 'builderLimit',
+				type: 'number',
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+						operation: ['queryBuilder'],
+					},
+				},
+				default: '',
+				description: 'Maximum number of rows to return',
+			},
+			{
+				displayName: 'Offset',
+				name: 'builderOffset',
+				type: 'number',
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+						operation: ['queryBuilder'],
+					},
+				},
+				default: '',
+				description: 'Number of rows to skip',
+			},
+
+			// Aggregate Query fields
+			{
+				displayName: 'Function',
+				name: 'aggregateFunction',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+						operation: ['aggregateQuery'],
+					},
+				},
+				options: [
+					{ name: 'Count', value: 'COUNT' },
+					{ name: 'Sum', value: 'SUM' },
+					{ name: 'Average', value: 'AVG' },
+					{ name: 'Minimum', value: 'MIN' },
+					{ name: 'Maximum', value: 'MAX' },
+					{ name: 'Group Concat', value: 'GROUP_CONCAT' },
+				],
+				default: 'COUNT',
+				description: 'Aggregate function to apply',
+			},
+			{
+				displayName: 'Column',
+				name: 'aggregateColumn',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+						operation: ['aggregateQuery'],
+					},
+					hide: {
+						aggregateFunction: ['COUNT'],
+					},
+				},
+				typeOptions: {
+					loadOptionsDependsOn: ['builderTable'],
+					loadOptionsMethod: 'getTableColumns',
+				},
+				default: '',
+				description: 'Column to aggregate (leave empty for COUNT(*))',
+			},
+			{
+				displayName: 'Group By',
+				name: 'groupBy',
+				type: 'multiOptions',
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+						operation: ['aggregateQuery'],
+					},
+				},
+				typeOptions: {
+					loadOptionsDependsOn: ['builderTable'],
+					loadOptionsMethod: 'getTableColumns',
+				},
+				default: [],
+				description: 'Columns to group by',
+			},
+
+			// Get Distinct Values fields
+			{
+				displayName: 'Column',
+				name: 'distinctColumn',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['builder'],
+						operation: ['getDistinctValues'],
+					},
+				},
+				typeOptions: {
+					loadOptionsDependsOn: ['builderTable'],
+					loadOptionsMethod: 'getTableColumns',
+				},
+				default: '',
+				required: true,
+				description: 'Column to get distinct values from',
+			},
+
+			// DATABASE OPERATIONS
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['database'],
+					},
+				},
+				options: [
+					{
+						name: 'Export Database',
+						value: 'exportDatabase',
+						description: 'Export database to SQL file',
+						action: 'Export database',
+					},
+					{
+						name: 'Import Database',
+						value: 'importDatabase',
+						description: 'Import SQL file to database',
+						action: 'Import database',
+					},
+					{
+						name: 'Get Database Info',
+						value: 'getDatabaseInfo',
+						description: 'Get information about the database',
+						action: 'Get database info',
+					},
+					{
+						name: 'List Databases',
+						value: 'listDatabases',
+						description: 'List all D1 databases in account',
+						action: 'List all databases',
+					},
+				],
+				default: 'getDatabaseInfo',
+				noDataExpression: true,
+			},
+
+			// Import Database fields
+			{
+				displayName: 'SQL Content',
+				name: 'importSql',
+				type: 'string',
+				typeOptions: {
+					rows: 10,
+				},
+				displayOptions: {
+					show: {
+						resource: ['database'],
+						operation: ['importDatabase'],
+					},
+				},
+				default: '',
+				required: true,
+				description: 'SQL content to import',
+				placeholder: 'CREATE TABLE ...\nINSERT INTO ...',
+			},
+			{
+				displayName: 'WARNING: Import will replace existing data. The database will be unavailable during import.',
+				name: 'importWarning',
+				type: 'notice',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['database'],
+						operation: ['importDatabase'],
+					},
+				},
 			},
 		],
 	};
@@ -818,7 +1510,7 @@ export class CloudflareD1 implements INodeType {
 						default:
 							throw new NodeOperationError(this.getNode(), `Unknown table operation: ${operation}`);
 					}
-				} else {
+				} else if (resource === 'query') {
 					// Handle query operations
 					const operation = this.getNodeParameter('operation', i) as string;
 
@@ -866,6 +1558,227 @@ export class CloudflareD1 implements INodeType {
 
 						default:
 							throw new NodeOperationError(this.getNode(), `Unknown query operation: ${operation}`);
+					}
+				} else if (resource === 'tableManagement') {
+					// Handle table management operations
+					const operation = this.getNodeParameter('operation', i) as string;
+					
+					switch (operation) {
+						case 'createTable':
+							const createTableName = this.getNodeParameter('createTableName', i) as string;
+							const columns = this.getNodeParameter('columns.column', i, []) as any[];
+							const options = this.getNodeParameter('createTableOptions', i, {}) as any;
+							
+							if (!columns || columns.length === 0) {
+								throw new NodeOperationError(this.getNode(), 'At least one column must be defined');
+							}
+							
+							const tableColumns = columns.map(col => ({
+								name: col.name,
+								type: col.type,
+								primaryKey: col.primaryKey || false,
+								autoIncrement: col.autoIncrement || false,
+								notNull: col.notNull || false,
+								unique: col.unique || false,
+								defaultValue: col.defaultValue || undefined,
+							}));
+							
+							const createOptions = {
+								ifNotExists: options.ifNotExists !== false,
+								withoutRowId: options.withoutRowId || false,
+								strict: options.strict || false,
+							};
+							
+							const createSql = CloudflareD1Utils.buildCreateTableSQL(createTableName, tableColumns, createOptions);
+							const createResponse = await CloudflareD1Utils.executeQuery(this, config, createSql);
+							
+							result = {
+								success: createResponse.result[0].success,
+								tableName: createTableName,
+								sql: createSql,
+								meta: createResponse.result[0].meta,
+							};
+							break;
+							
+						case 'listTables':
+							const tables = await CloudflareD1Utils.getTables(this, config);
+							result = {
+								success: true,
+								tables,
+								count: tables.length,
+							};
+							break;
+							
+						case 'getTableSchema':
+							const schemaTable = this.getNodeParameter('schemaTable', i) as { mode: string; value: string } | string;
+							const schemaTableName = typeof schemaTable === 'string' ? schemaTable : schemaTable.value;
+							
+							const schema = await CloudflareD1Utils.getTableSchema(this, config, schemaTableName);
+							result = {
+								success: true,
+								...schema,
+							};
+							break;
+							
+						case 'dropTable':
+							const dropTable = this.getNodeParameter('dropTable', i) as { mode: string; value: string } | string;
+							const dropTableName = typeof dropTable === 'string' ? dropTable : dropTable.value;
+							const dropIfExists = this.getNodeParameter('dropIfExists', i, true) as boolean;
+							
+							const dropSql = dropIfExists 
+								? `DROP TABLE IF EXISTS "${dropTableName}"`
+								: `DROP TABLE "${dropTableName}"`;
+							
+							const dropResponse = await CloudflareD1Utils.executeQuery(this, config, dropSql);
+							
+							result = {
+								success: dropResponse.result[0].success,
+								tableName: dropTableName,
+								sql: dropSql,
+								meta: dropResponse.result[0].meta,
+							};
+							break;
+							
+						default:
+							throw new NodeOperationError(this.getNode(), `Unknown table management operation: ${operation}`);
+					}
+				} else if (resource === 'builder') {
+					// Handle query builder operations
+					const operation = this.getNodeParameter('operation', i) as string;
+					const builderTable = this.getNodeParameter('builderTable', i) as { mode: string; value: string } | string;
+					const tableName = typeof builderTable === 'string' ? builderTable : builderTable.value;
+					
+					switch (operation) {
+						case 'queryBuilder':
+							const queryColumns = this.getNodeParameter('queryColumns', i, []) as string[];
+							const whereConditions = this.getNodeParameter('whereConditions.condition', i, []) as any[];
+							const orderBy = this.getNodeParameter('orderBy.sort', i, []) as any[];
+							const builderLimit = this.getNodeParameter('builderLimit', i, 0) as number;
+							const builderOffset = this.getNodeParameter('builderOffset', i, 0) as number;
+							
+							const queryBuilder = {
+								table: tableName,
+								columns: queryColumns.length > 0 ? queryColumns : undefined,
+								where: whereConditions.map(cond => ({
+									field: cond.field,
+									operator: cond.operator,
+									value: cond.operator === 'IN' || cond.operator === 'NOT IN' 
+										? cond.value?.split(',').map((v: string) => v.trim())
+										: cond.value,
+									value2: cond.value2,
+								})),
+								orderBy: orderBy.map(sort => ({
+									field: sort.field,
+									direction: sort.direction,
+								})),
+								limit: builderLimit || undefined,
+								offset: builderOffset || undefined,
+							};
+							
+							const { sql: querySql, params: queryParams } = CloudflareD1Utils.buildQueryFromBuilder(queryBuilder);
+							const queryResponse = await CloudflareD1Utils.executeQuery(this, config, querySql, queryParams);
+							
+							result = {
+								success: queryResponse.result[0].success,
+								results: queryResponse.result[0].results,
+								meta: queryResponse.result[0].meta,
+								sql: querySql,
+							};
+							break;
+							
+						case 'aggregateQuery':
+							const aggregateFunction = this.getNodeParameter('aggregateFunction', i) as string;
+							const aggregateColumn = this.getNodeParameter('aggregateColumn', i, '') as string;
+							const aggregateWhere = this.getNodeParameter('whereConditions.condition', i, []) as any[];
+							const groupBy = this.getNodeParameter('groupBy', i, []) as string[];
+							
+							const aggregateQuery: D1AggregateQuery = {
+								table: tableName,
+								function: aggregateFunction as D1AggregateFunction,
+								column: aggregateColumn || undefined,
+								where: aggregateWhere.map(cond => ({
+									field: cond.field,
+									operator: cond.operator as D1WhereOperator,
+									value: cond.operator === 'IN' || cond.operator === 'NOT IN'
+										? cond.value?.split(',').map((v: string) => v.trim())
+										: cond.value,
+									value2: cond.value2,
+								})),
+								groupBy: groupBy.length > 0 ? groupBy : undefined,
+							};
+							
+							const { sql: aggSql, params: aggParams } = CloudflareD1Utils.buildAggregateQuery(aggregateQuery);
+							const aggResponse = await CloudflareD1Utils.executeQuery(this, config, aggSql, aggParams);
+							
+							result = {
+								success: aggResponse.result[0].success,
+								results: aggResponse.result[0].results,
+								meta: aggResponse.result[0].meta,
+								sql: aggSql,
+							};
+							break;
+							
+						case 'getDistinctValues':
+							const distinctColumn = this.getNodeParameter('distinctColumn', i) as string;
+							
+							const distinctSql = `SELECT DISTINCT "${distinctColumn}" FROM "${tableName}" WHERE "${distinctColumn}" IS NOT NULL ORDER BY "${distinctColumn}"`;
+							const distinctResponse = await CloudflareD1Utils.executeQuery(this, config, distinctSql);
+							
+							result = {
+								success: distinctResponse.result[0].success,
+								results: distinctResponse.result[0].results,
+								meta: distinctResponse.result[0].meta,
+								column: distinctColumn,
+								values: distinctResponse.result[0].results.map((row: any) => row[distinctColumn]),
+							};
+							break;
+							
+						case 'tableStatistics':
+							const stats = await CloudflareD1Utils.getTableStatistics(this, config, tableName);
+							result = {
+								success: true,
+								...stats,
+							};
+							break;
+							
+						default:
+							throw new NodeOperationError(this.getNode(), `Unknown builder operation: ${operation}`);
+					}
+				} else if (resource === 'database') {
+					// Handle database operations
+					const operation = this.getNodeParameter('operation', i) as string;
+					
+					switch (operation) {
+						case 'exportDatabase':
+							const exportResult = await CloudflareD1Utils.exportDatabase(this, config);
+							result = exportResult;
+							break;
+							
+						case 'importDatabase':
+							const importSql = this.getNodeParameter('importSql', i) as string;
+							const importResult = await CloudflareD1Utils.importDatabase(this, config, importSql);
+							result = importResult;
+							break;
+							
+						case 'getDatabaseInfo':
+							const dbInfo = await CloudflareD1Utils.getDatabaseInfo(this, config);
+							result = {
+								success: true,
+								...dbInfo,
+							};
+							break;
+							
+						case 'listDatabases':
+							const databases = await CloudflareD1Utils.listDatabases(this, config);
+							result = {
+								success: true,
+								databases,
+								count: databases.length,
+							};
+							break;
+							
+						default:
+							throw new NodeOperationError(this.getNode(), `Unknown database operation: ${operation}`);
 					}
 				}
 

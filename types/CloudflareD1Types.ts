@@ -27,7 +27,7 @@ export type D1Operation =
 	| 'getDatabaseInfo'
 	| 'listDatabases';
 
-export type D1Resource = 'table' | 'query' | 'builder' | 'database';
+export type D1Resource = 'table' | 'query' | 'builder' | 'database' | 'tableManagement';
 
 // Table introspection types
 export interface D1TableInfo {
