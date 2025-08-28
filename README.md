@@ -1,13 +1,33 @@
-# n8n Cloudflare D1 Node v0.2.1
+# n8n Cloudflare D1 Node v0.4.0
 
 [![npm version](https://badge.fury.io/js/n8n-nodes-cloudflare-d1.svg)](https://badge.fury.io/js/n8n-nodes-cloudflare-d1)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive n8n community node for integrating with Cloudflare D1, a serverless SQLite-compatible database. Version 0.2.1 includes complete structured database operations (Insert, Select, Update, Delete) with PostgreSQL/Supabase-style interfaces, plus chat memory capabilities for AI Agent workflows.
+A comprehensive n8n community node for integrating with Cloudflare D1, a serverless SQLite-compatible database. Version 0.4.0 includes complete table management, visual query builders, database administration tools, structured database operations (Insert, Select, Update, Delete), and chat memory capabilities for AI Agent workflows.
 
 ![Cloudflare D1 Node](https://raw.githubusercontent.com/jezweb/n8n-nodes-cloudflare-d1/main/docs/images/node-preview.png)
 
 ## Features
+
+### Table Management (v0.4.0) 🆕
+- 📋 **Create Tables**: Visual table builder without SQL knowledge
+- 🔍 **List Tables**: View all tables and views in your database
+- 📊 **Schema Inspection**: View table structure and column definitions
+- 🗑️ **Drop Tables**: Safe table deletion with IF EXISTS support
+- 🔧 **Alter Tables**: Add/drop columns, rename tables, manage indexes
+
+### Query Builder Tools (v0.4.0) 🆕
+- 🎨 **Visual Query Builder**: Build complex SELECT queries without SQL
+- 📈 **Aggregate Queries**: COUNT, SUM, AVG, MIN, MAX, GROUP_CONCAT
+- 🔎 **Search Records**: Full-text search across multiple columns
+- 🎯 **Distinct Values**: Extract unique values from columns
+- 📊 **Table Statistics**: Row counts and database analytics
+
+### Database Management (v0.4.0) 🆕
+- 💾 **Export Database**: Backup databases to SQL files
+- 📂 **Import Database**: Restore from SQL dumps
+- ℹ️ **Database Info**: View metadata, size, and creation date
+- 📝 **List Databases**: View all D1 databases in your account
 
 ### Core Database Operations
 - 🗄️ **Full D1 Integration**: Execute SQL queries, batch operations, and raw SQL commands
@@ -33,12 +53,12 @@ A comprehensive n8n community node for integrating with Cloudflare D1, a serverl
 
 #### Via n8n Community Nodes (Recommended)
 1. Go to **Settings > Community Nodes** in your n8n instance
-2. Enter `n8n-nodes-cloudflare-d1@0.2.0` and click Install
+2. Enter `n8n-nodes-cloudflare-d1` and click Install
 3. Restart n8n - both **Cloudflare D1** and **Cloudflare D1 Chat Memory** nodes will appear in your nodes panel
 
 #### Via npm
 ```bash
-npm install n8n-nodes-cloudflare-d1@0.2.0
+npm install n8n-nodes-cloudflare-d1
 ```
 
 ### Prerequisites
@@ -122,7 +142,75 @@ WHERE id = ?;
 
 ### Main Node: Cloudflare D1
 
-#### Execute Query
+#### Table Management Operations (v0.4.0)
+
+##### Create Table
+Create a new table visually without writing SQL. Use the column builder to add columns with types and constraints.
+
+**Features:**
+- Visual column definition with types (TEXT, INTEGER, REAL, BLOB, BOOLEAN, DATETIME, JSON)
+- Constraint configuration (PRIMARY KEY, NOT NULL, UNIQUE, DEFAULT, AUTO INCREMENT)
+- IF NOT EXISTS option for safe table creation
+
+##### List Tables
+Get a list of all tables and views in your database.
+
+##### Get Table Schema
+View the structure of a table including column names, types, and constraints.
+
+##### Drop Table
+Safely delete a table with optional IF EXISTS clause.
+
+##### Alter Table
+Modify table structure (add/drop columns, rename, manage indexes).
+
+#### Query Builder Operations (v0.4.0)
+
+##### Query Builder
+Build complex SELECT queries visually without SQL knowledge.
+
+**Features:**
+- Column selection
+- WHERE conditions with multiple operators (=, !=, >, <, LIKE, IN, BETWEEN, etc.)
+- JOIN support (INNER, LEFT, RIGHT, FULL)
+- GROUP BY and HAVING clauses
+- ORDER BY with multiple columns
+- LIMIT and OFFSET for pagination
+
+##### Aggregate Query
+Perform statistical operations on your data.
+
+**Functions:**
+- COUNT, SUM, AVG, MIN, MAX, GROUP_CONCAT
+- WHERE filtering
+- GROUP BY support
+
+##### Search Records
+Search across multiple columns with pattern matching.
+
+##### Get Distinct Values
+Extract unique values from one or more columns.
+
+##### Table Statistics
+Get row counts and database analytics.
+
+#### Database Management Operations (v0.4.0)
+
+##### Export Database
+Export your entire database to a SQL dump file with a signed URL.
+
+##### Import Database
+Import data from a SQL file to restore or migrate databases.
+
+##### Get Database Info
+View database metadata including UUID, table count, size, and creation date.
+
+##### List Databases
+List all D1 databases in your Cloudflare account.
+
+#### Core Query Operations
+
+##### Execute Query
 Execute a single parameterized SQL query with optional parameter binding.
 
 **Parameters:**
@@ -130,14 +218,14 @@ Execute a single parameterized SQL query with optional parameter binding.
 - **SQL Query**: The SQL statement to execute  
 - **Parameters**: Optional array of parameters for binding (prevents SQL injection)
 
-#### Batch Queries  
+##### Batch Queries  
 Execute multiple SQL queries in a single transaction for better performance and atomicity.
 
 **Parameters:**
 - **Database ID**: Your D1 database identifier
 - **Queries**: Array of SQL statements with optional parameters
 
-#### Execute Raw SQL
+##### Execute Raw SQL
 Execute raw SQL commands without parameter binding (use with caution).
 
 **Parameters:**

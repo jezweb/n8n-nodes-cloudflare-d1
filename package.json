@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-cloudflare-d1",
-  "version": "0.3.0",
-  "description": "n8n community node for Cloudflare D1 serverless database integration, featuring structured operations (Insert/Select/Update/Delete), chat memory for AI agents, SQL queries, batch operations, and full AI Agent compatibility",
+  "version": "0.4.0",
+  "description": "n8n community node for Cloudflare D1 serverless database integration, featuring table management, visual query builders, database admin tools, structured operations (Insert/Select/Update/Delete), chat memory for AI agents, SQL queries, batch operations, and full AI Agent compatibility",
   "keywords": [
     "n8n-community-node-package",
     "cloudflare",

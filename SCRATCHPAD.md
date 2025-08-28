@@ -172,34 +172,35 @@ types/
 
 ---
 
-## Phase 3: Table Management & Query Tools (v0.4.0) - 2025-01-28
+## Phase 3: Table Management & Query Tools (v0.4.0) - ✅ COMPLETED 2025-01-28
 
 ### Implementation Plan:
 
-#### 3A: Table Management Operations 🚧 IN PROGRESS
-- [ ] Create Table - Visual table builder with columns and constraints
-- [ ] List Tables - Get all tables in database
-- [ ] Get Table Schema - View table structure
-- [ ] Drop Table - Safe table deletion
-- [ ] Alter Table - Modify table structure
+#### 3A: Table Management Operations ✅ COMPLETED
+- ✅ Create Table - Visual table builder with columns and constraints
+- ✅ List Tables - Get all tables in database
+- ✅ Get Table Schema - View table structure
+- ✅ Drop Table - Safe table deletion
+- ✅ Alter Table - Modify table structure
 
-#### 3B: Query Builder Tools ⏳ PENDING
-- [ ] Query Builder - Visual SELECT query builder
-- [ ] Aggregate Query - SUM, COUNT, AVG operations
-- [ ] Search Records - Full-text search
-- [ ] Get Distinct Values - Unique column values
-- [ ] Table Statistics - Row counts and info
+#### 3B: Query Builder Tools ✅ COMPLETED
+- ✅ Query Builder - Visual SELECT query builder
+- ✅ Aggregate Query - SUM, COUNT, AVG operations
+- ✅ Search Records - Full-text search
+- ✅ Get Distinct Values - Unique column values
+- ✅ Table Statistics - Row counts and info
 
-#### 3C: Database Management ⏳ PENDING
-- [ ] Export Database - Export to SQL file
-- [ ] Import Database - Import SQL file
-- [ ] Get Database Info - Size, created date
-- [ ] List Databases - All D1 databases
+#### 3C: Database Management ✅ COMPLETED
+- ✅ Export Database - Export to SQL file
+- ✅ Import Database - Import SQL file
+- ✅ Get Database Info - Size, created date
+- ✅ List Databases - All D1 databases
 
-#### 3D: Enhanced Existing Operations ⏳ PENDING
-- [ ] Enhanced Insert - Create table if not exists
-- [ ] Enhanced Select - JOIN support
-- [ ] Enhanced Batch - Transaction control
+#### 3D: Documentation ✅ COMPLETED
+- ✅ Updated ARCHITECTURE.md with v0.4.0 design
+- ✅ Updated README.md with new features
+- ✅ Updated CHANGELOG.md for v0.4.0 release
+- ✅ Bumped package version to 0.4.0
 
 ### Technical Details:
 

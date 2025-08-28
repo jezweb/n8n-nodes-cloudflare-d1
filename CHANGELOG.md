@@ -8,10 +8,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned (Future)
-- Advanced WHERE clause operators (IN, LIKE, NOT NULL, etc.)
-- ORDER BY support for structured SELECT operations
-- Batch Insert operations via UI
-- Advanced table management features
+- Real-time database schema caching
+- Advanced migration tools
+- Performance analytics and query optimization
+- Custom SQL function support
+
+## [0.4.0] - 2025-01-28
+
+### Added
+#### Table Management Operations
+- **Create Table**: Visual table builder without SQL knowledge
+  - Column type selection (TEXT, INTEGER, REAL, BLOB, BOOLEAN, DATETIME, JSON)
+  - Constraint configuration (PRIMARY KEY, NOT NULL, UNIQUE, DEFAULT, AUTO INCREMENT)
+  - IF NOT EXISTS option for safe table creation
+- **List Tables**: Database schema discovery with table enumeration
+- **Get Table Schema**: View table structure, columns, and constraints
+- **Drop Table**: Safe table deletion with IF EXISTS support
+- **Alter Table**: Add/drop columns, rename tables, manage indexes
+
+#### Query Builder Tools
+- **Visual Query Builder**: Build complex SELECT queries without SQL
+  - WHERE conditions with multiple operators (=, !=, >, <, >=, <=, LIKE, IN, BETWEEN)
+  - JOIN support (INNER, LEFT, RIGHT, FULL, CROSS)
+  - GROUP BY and HAVING clauses
+  - ORDER BY with multiple columns
+  - LIMIT and OFFSET pagination
+- **Aggregate Query**: Statistical operations (COUNT, SUM, AVG, MIN, MAX, GROUP_CONCAT)
+- **Search Records**: Full-text search across multiple columns
+- **Get Distinct Values**: Extract unique values from columns
+- **Table Statistics**: Row counts and database analytics
+
+#### Database Management
+- **Export Database**: Backup to SQL dump with signed URL
+- **Import Database**: Restore from SQL files
+- **Get Database Info**: View UUID, table count, size, creation date
+- **List Databases**: Enumerate all D1 databases in account
+
+### Improved
+- Resource organization with new categories: tableManagement, builder, database
+- Enhanced parameter validation and type safety
+- Better error messages for all operations
+- Comprehensive TypeScript type definitions
+
+### Technical
+- New utility methods: buildCreateTableSQL, buildQueryFromBuilder, buildAggregateQuery
+- Support for all SQLite column types and constraints
+- Full parameter binding across all query builders
+- Cloudflare D1 API integration for database management
 
 ## [0.2.1] - 2025-08-28
 

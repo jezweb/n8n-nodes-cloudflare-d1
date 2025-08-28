@@ -1,7 +1,7 @@
 # Architecture Documentation - n8n Cloudflare D1 Node
 
 ## Overview
-This n8n community node provides comprehensive integration with Cloudflare D1, a serverless SQLite-compatible database. The v0.2.0 architecture supports both standard workflow usage and AI Agent tool integration, with enhanced infrastructure for structured database operations and chat memory functionality.
+This n8n community node provides comprehensive integration with Cloudflare D1, a serverless SQLite-compatible database. The v0.4.0 architecture supports both standard workflow usage and AI Agent tool integration, with complete table management, visual query builders, and database administration capabilities.
 
 ## System Architecture
 
@@ -107,7 +107,7 @@ User Input → Resource Selection → Operation Choice → Query Builder → Par
    - Higher privileges required
    - Use with caution in production
 
-#### Enhanced Operations (v0.2.0 Infrastructure Ready)
+#### Table Operations (v0.2.0+)
 4. **Insert** - Structured data insertion with column mapping
    - Table selection with auto-discovery
    - Column-to-field mapping interface
@@ -131,6 +131,79 @@ User Input → Resource Selection → Operation Choice → Query Builder → Par
    - Confirmation prompts
    - Cascade option handling
    - Audit trail support
+
+#### Table Management Operations (v0.4.0)
+8. **Create Table** - Visual table creation without SQL
+   - Column builder with type selection
+   - Constraint configuration (PRIMARY KEY, NOT NULL, UNIQUE)
+   - Default values and auto-increment
+   - IF NOT EXISTS option
+
+9. **List Tables** - Database schema discovery
+   - Table and view enumeration
+   - Basic metadata retrieval
+   - Filter by type
+
+10. **Get Table Schema** - Table structure introspection
+    - Column definitions and types
+    - Constraints and indexes
+    - Foreign key relationships
+
+11. **Drop Table** - Safe table deletion
+    - IF EXISTS option
+    - Cascade handling
+
+12. **Alter Table** - Table structure modification
+    - Add/Drop columns
+    - Rename table/columns
+    - Index management
+
+#### Query Builder Operations (v0.4.0)
+13. **Query Builder** - Visual SELECT query construction
+    - Multiple WHERE conditions with operators
+    - JOIN support (INNER, LEFT, RIGHT, FULL)
+    - GROUP BY and HAVING clauses
+    - ORDER BY multiple columns
+
+14. **Aggregate Query** - Statistical operations
+    - Functions: COUNT, SUM, AVG, MIN, MAX, GROUP_CONCAT
+    - WHERE filtering
+    - GROUP BY with HAVING
+
+15. **Search Records** - Full-text search
+    - Multiple column search
+    - LIKE pattern matching
+    - Case sensitivity options
+
+16. **Get Distinct Values** - Unique value extraction
+    - Single or multiple columns
+    - WHERE filtering
+    - Counting occurrences
+
+17. **Table Statistics** - Database analytics
+    - Row counts
+    - Table size estimation
+    - Index usage statistics
+
+#### Database Management Operations (v0.4.0)
+18. **Export Database** - Database backup
+    - SQL dump generation
+    - Signed URL creation
+    - Time-limited access
+
+19. **Import Database** - Database restoration
+    - SQL file upload
+    - Bulk data import
+    - Schema recreation
+
+20. **Get Database Info** - Database metadata
+    - UUID and name
+    - Table count
+    - File size and creation date
+
+21. **List Databases** - Account database enumeration
+    - All D1 databases in account
+    - Basic metadata for each
 
 ### Chat Memory Sub-Node (CloudflareD1ChatMemory)
 
@@ -231,7 +304,7 @@ User Input → Resource Selection → Operation Choice → Query Builder → Par
 - Prettier: Code formatting
 - Gulp: Build process automation
 
-## Type System (v0.2.0)
+## Type System (v0.4.0)
 
 ### Core Interface Definitions
 ```typescript
@@ -272,6 +345,50 @@ interface D1QueryResult {
     last_row_id?: number;
   };
   error?: string;
+}
+```
+
+### Table Management Types (v0.4.0)
+```typescript
+// Table column definitions
+type D1ColumnType = 'TEXT' | 'INTEGER' | 'REAL' | 'BLOB' | 'BOOLEAN' | 'DATETIME' | 'JSON';
+
+interface D1TableColumn {
+  name: string;
+  type: D1ColumnType;
+  primaryKey?: boolean;
+  notNull?: boolean;
+  unique?: boolean;
+  defaultValue?: string | number | boolean | null;
+  autoIncrement?: boolean;
+}
+
+// Query builder types
+type D1WhereOperator = '=' | '!=' | '>' | '<' | '>=' | '<=' | 'LIKE' | 'NOT LIKE' | 'IN' | 'NOT IN' | 'IS NULL' | 'IS NOT NULL' | 'BETWEEN';
+type D1JoinType = 'INNER' | 'LEFT' | 'RIGHT' | 'FULL OUTER' | 'CROSS';
+type D1AggregateFunction = 'COUNT' | 'SUM' | 'AVG' | 'MIN' | 'MAX' | 'GROUP_CONCAT';
+
+interface D1QueryBuilder {
+  table: string;
+  columns?: string[];
+  where?: D1WhereCondition[];
+  whereLogic?: 'AND' | 'OR';
+  joins?: D1JoinClause[];
+  groupBy?: string[];
+  having?: D1WhereCondition[];
+  orderBy?: Array<{ field: string; direction: 'ASC' | 'DESC' }>;
+  limit?: number;
+  offset?: number;
+}
+
+// Database management types
+interface D1DatabaseInfo {
+  uuid: string;
+  name: string;
+  version?: string;
+  num_tables?: number;
+  file_size?: number;
+  created_at?: string;
 }
 ```
 
