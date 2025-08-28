@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance analytics and query optimization
 - Custom SQL function support
 
+## [0.5.1] - 2025-01-28
+
+### Fixed
+- **Memory Resource UI**: Removed confusing placeholder session ID from "Search in Session" field
+  - Field now appears empty by default, making it clearer that session ID is optional
+  - Improves AI Agent understanding that global searches across all sessions are supported
+  - Better user experience for optional parameter fields
+
 ## [0.5.0] - 2025-01-28
 
 ### Added

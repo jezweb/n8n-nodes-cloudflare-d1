@@ -1400,7 +1400,6 @@ export class CloudflareD1 implements INodeType {
 					},
 				},
 				default: '',
-				placeholder: 'fe4621679-4f44f-ca991e52d2ea46508',
 				description: 'Optional: Limit search to specific session (leave empty to search all sessions)',
 			},
 			{
