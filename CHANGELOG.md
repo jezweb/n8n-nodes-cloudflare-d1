@@ -7,23 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- Initial project setup with n8n-nodes-starter template
-- Comprehensive documentation structure
-- Project configuration and package.json setup
-- Architecture documentation with system design
-- Deployment guide with installation instructions
-- README with feature overview and usage examples
+### Planned (Phase 2B)
+- Structured database operations (Insert, Select, Update, Delete)
+- Table introspection and schema discovery
+- Visual query builder interface
+- Enhanced AI Agent integration with structured operations
 
-### Development Progress
-- [x] Project initialization and structure setup
-- [x] Documentation framework created
-- [x] Cloudflare D1 API credentials implementation
-- [x] Core node functionality development
-- [x] AI Agent tool compatibility integration
-- [x] Local testing and validation
-- [x] GitHub repository creation
-- [x] npm package publication
+## [0.2.0] - 2025-01-28 (Phase 2A Infrastructure Complete)
+
+### Added
+#### Enhanced Infrastructure
+- **Comprehensive Type System**: Complete TypeScript type definitions in `types/CloudflareD1Types.ts`
+- **Utility Layer**: Query builders and API utilities in `utils/CloudflareD1Utils.ts`
+- **Chat Memory Sub-Node**: LangChain-compatible chat message storage (`CloudflareD1ChatMemory`)
+
+#### Chat Memory Features
+- Session-based conversation storage with automatic table creation
+- Message type classification (human/ai/system) with metadata support  
+- Configurable message limits and expiration policies
+- Automatic cleanup of old messages and session management
+- Integration with AI Agent workflows for persistent context
+
+#### Developer Experience
+- Enhanced documentation with v0.2.0 architecture details
+- Improved deployment guide with chat memory configuration
+- Updated README with comprehensive feature coverage
+- Type-safe query building infrastructure (ready for Phase 2B)
+
+### Infrastructure
+- **Type Safety**: Complete interface definitions for all operations
+- **Query Builders**: Parameterized query construction with security
+- **Error Handling**: Enhanced error types and comprehensive validation
+- **API Layer**: Centralized Cloudflare D1 API communication utilities
+
+### Compatibility
+- **Backward Compatible**: All v0.1.0 workflows continue to function unchanged
+- **Enhanced Capabilities**: New chat memory functionality without breaking changes
+- **AI Agent Optimized**: Both nodes support `usableAsTool: true` for AI workflows
+
+### Technical Improvements
+- **Build System**: Successfully compiles with enhanced infrastructure
+- **Package Management**: Updated to include both main and chat memory nodes
+- **Documentation**: Comprehensive updates across all documentation files
 
 ## [0.1.0] - 2025-01-28
 
@@ -68,15 +93,12 @@ This initial release focuses on core functionality:
 - AI Agent tool integration for workflow automation
 - Comprehensive error handling and debugging support
 
-### Future Enhancements (Planned)
-- Database schema introspection
-- Visual query builder interface
-- Advanced JSON operation helpers
-- Connection caching and pooling
-- Real-time query monitoring
-- Bulk import/export operations
-- Custom SQL function support
-- Query performance analytics
+### Future Enhancements (Phase 2B and Beyond)
+- **Structured Operations**: Insert, Select, Update, Delete with visual interfaces
+- **Schema Discovery**: Database introspection and table/column discovery
+- **Query Builder**: Visual query construction interface
+- **Advanced Features**: Custom functions, performance analytics, bulk operations
+- **Enhanced AI Integration**: Structured operations as AI tools
 
 ### Technical Debt
 - Add comprehensive unit tests

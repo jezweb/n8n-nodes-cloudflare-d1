@@ -1,6 +1,8 @@
 # n8n Cloudflare D1 Node Development Scratchpad
 
-## Current Status: ✅ COMPLETED AND PUBLISHED
+## Current Status: 🚧 ENHANCING WITH STRUCTURED OPERATIONS
+
+### Phase 1: Basic Implementation ✅ COMPLETED
 - ✅ Cloned n8n-nodes-starter template
 - ✅ Set up project structure and package.json
 - ✅ Created comprehensive documentation files
@@ -11,6 +13,24 @@
 - ✅ Created GitHub repository: https://github.com/jezweb/n8n-nodes-cloudflare-d1
 - ✅ Published to npm registry: https://www.npmjs.com/package/n8n-nodes-cloudflare-d1
 - ✅ Ready for installation and testing
+
+### Phase 2: Enhanced Operations 🚧 IN PROGRESS
+
+#### Phase 2A: Infrastructure Complete ✅
+- ✅ Research completed for structured operations and chat memory
+- ✅ Created comprehensive type definitions (D1Operation, D1Resource, etc.)
+- ✅ Built CloudflareD1Utils utility class with query builders
+- ✅ Created CloudflareD1ChatMemory sub-node for LangChain integration
+- ✅ Updated package.json for v0.2.0 with new node registration
+- ✅ Project builds successfully with new infrastructure
+
+#### Phase 2B: Structured Operations Implementation 🚧 IN PROGRESS
+- ⏳ Adding resource/operation pattern (Table vs Query)
+- ⏳ Implementing structured Insert operation with column mapping
+- ⏳ Implementing structured Select operation with query builder
+- ⏳ Implementing structured Update/Delete operations
+- ⏳ Adding table introspection functionality
+- ⏳ Maintaining backward compatibility with existing workflows
 
 ## Key Research Findings
 
@@ -31,10 +51,20 @@
 
 ## Node Design Decisions
 
-### Operations to Implement:
-1. **Execute Query** - Single parameterized SQL query
-2. **Batch Queries** - Multiple queries in transaction
-3. **Execute Raw SQL** - Direct SQL execution (maintenance tasks)
+### Enhanced Operations (v0.2.0):
+1. **Insert** - Structured insert with column mapping (like Postgres node)
+2. **Select** - Query builder interface for SELECT operations  
+3. **Update** - Update operations with condition builders
+4. **Delete** - Delete operations with safety checks
+5. **Execute Query** - Single parameterized SQL query (existing)
+6. **Batch Queries** - Multiple queries in transaction (existing)
+7. **Execute Raw SQL** - Direct SQL execution (existing)
+
+### Chat Memory Sub-Node:
+- **CloudflareD1ChatMemory** - LangChain-compatible memory sub-node
+- Implements chat message storage schema optimized for D1
+- Session management and conversation context
+- Compatible with n8n's cluster node architecture
 
 ### Parameters Structure:
 - Database ID (required)
@@ -53,9 +83,16 @@ credentials/
 ├── CloudflareD1Api.credentials.ts
 nodes/
 ├── CloudflareD1/
-│   ├── CloudflareD1.node.ts
+│   ├── CloudflareD1.node.ts (enhanced with structured operations)
 │   ├── CloudflareD1.node.json
 │   └── cloudflared1.svg
+├── CloudflareD1ChatMemory/
+│   ├── CloudflareD1ChatMemory.node.ts (new LangChain sub-node)
+│   └── cloudflared1-chat.svg
+utils/
+├── CloudflareD1Utils.ts (new utility functions)
+types/
+├── CloudflareD1Types.ts (new type definitions)
 ```
 
 ## Implementation Details:
@@ -82,16 +119,53 @@ nodes/
 - Request body varies by operation (single query object or array)
 - Comprehensive error handling with Cloudflare API error mapping
 
-## Next Steps:
-1. Install dependencies and build project
-2. Test node functionality locally
-3. Create GitHub repository and push code
-4. Publish to npm registry
-5. Test AI Agent integration with MCP Trigger
+## Enhancement Implementation Plan:
 
-## Notes:
-- Follow naming convention: `n8n-nodes-cloudflare-d1`
-- Ensure AI-friendly descriptions for all operations and parameters
-- Include proper error handling for D1-specific errors
-- Support both individual and batch query operations
-- Maintain compatibility with both workflow and AI Agent use cases
+### Phase 2A: Structured Operations
+1. ✅ Research n8n database node patterns (Postgres/MySQL structure)
+2. ⏳ Analyze current node structure for enhancement compatibility
+3. ⏳ Create utility functions for table introspection
+4. ⏳ Implement Insert operation with column mapping
+5. ⏳ Implement Select operation with query builder interface
+6. ⏳ Implement Update operation with condition builder
+7. ⏳ Implement Delete operation with safety checks
+8. ⏳ Test backward compatibility with existing workflows
+
+### Phase 2B: Chat Memory Sub-Node
+1. ✅ Research LangChain memory interface requirements
+2. ✅ Design chat message storage schema for SQLite/D1
+3. ⏳ Create CloudflareD1ChatMemory sub-node
+4. ⏳ Implement chat message storage/retrieval operations
+5. ⏳ Add session management functionality
+6. ⏳ Test with n8n AI Agent workflows
+
+### Phase 2C: Documentation & Publishing
+1. ⏳ Update ARCHITECTURE.md with new structure
+2. ⏳ Update README.md with enhanced features
+3. ⏳ Update DEPLOYMENT.md with installation instructions
+4. ⏳ Update CHANGELOG.md with v0.2.0 features
+5. ⏳ Git commit and create v0.2.0 release
+6. ⏳ Publish enhanced version to npm
+
+## Technical Enhancement Notes:
+
+### Research Findings Summary:
+- **n8n Postgres Node Pattern**: Uses resource/operation pattern with structured operations
+- **LangChain Memory Interface**: Requires `addMessage()`, `getMessages()`, `clear()` methods
+- **Chat Storage Schema**: Standard pattern uses session_id, message_type, message, timestamp
+- **Cluster Node Architecture**: Sub-nodes extend functionality of parent/root nodes
+
+### Implementation Considerations:
+- Maintain backward compatibility with existing v0.1.0 workflows
+- Follow n8n's cluster node pattern for chat memory sub-node
+- Use D1's SQLite compatibility for chat message storage
+- Implement table introspection using SQLite system tables
+- Ensure AI-friendly descriptions for all new operations
+- Add comprehensive error handling for both D1 API and SQLite errors
+- Optimize for D1's serverless architecture (connection pooling, etc.)
+
+### Compatibility Requirements:
+- Support both workflow and AI Agent use cases
+- LangChain integration must follow n8n's memory sub-node standards
+- All structured operations must support n8n's data mapping interface
+- Chat memory must support session management and expiration

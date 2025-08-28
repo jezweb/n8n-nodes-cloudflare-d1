@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-cloudflare-d1",
-  "version": "0.1.0",
-  "description": "n8n community node for Cloudflare D1 serverless database integration, supporting SQL queries, batch operations, and AI Agent compatibility",
+  "version": "0.2.0",
+  "description": "n8n community node for Cloudflare D1 serverless database integration, featuring structured operations (Insert/Select/Update/Delete), chat memory for AI agents, SQL queries, batch operations, and full AI Agent compatibility",
   "keywords": [
     "n8n-community-node-package",
     "cloudflare",
@@ -9,7 +9,11 @@
     "database",
     "sql",
     "serverless",
-    "ai-tools"
+    "ai-tools",
+    "langchain",
+    "chat-memory",
+    "structured-operations",
+    "postgres-compatible"
   ],
   "license": "MIT",
   "homepage": "https://github.com/jezweb/n8n-nodes-cloudflare-d1#readme",
@@ -43,7 +47,8 @@
       "dist/credentials/CloudflareD1Api.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/CloudflareD1/CloudflareD1.node.js"
+      "dist/nodes/CloudflareD1/CloudflareD1.node.js",
+      "dist/nodes/CloudflareD1ChatMemory/CloudflareD1ChatMemory.node.js"
     ]
   },
   "devDependencies": {

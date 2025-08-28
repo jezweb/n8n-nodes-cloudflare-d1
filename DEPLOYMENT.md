@@ -1,7 +1,7 @@
-# Deployment Guide - n8n Cloudflare D1 Node
+# Deployment Guide - n8n Cloudflare D1 Node v0.2.0
 
 ## Overview
-This guide covers the deployment and installation of the n8n Cloudflare D1 community node, including local development, testing, and production deployment.
+This guide covers the deployment and installation of the n8n Cloudflare D1 community node v0.2.0, including enhanced infrastructure with chat memory capabilities, local development, testing, and production deployment.
 
 ## Prerequisites
 
@@ -23,18 +23,19 @@ This guide covers the deployment and installation of the n8n Cloudflare D1 commu
 
 ### Method 1: n8n Community Nodes (Recommended)
 1. **Access n8n Settings**: Go to Settings → Community Nodes
-2. **Install Package**: Enter `n8n-nodes-cloudflare-d1`
-3. **Restart n8n**: The node will appear in your nodes panel
+2. **Install Package**: Enter `n8n-nodes-cloudflare-d1@0.2.0`
+3. **Restart n8n**: Both main and chat memory nodes will appear in your nodes panel
 4. **Configure Credentials**: Add your Cloudflare API credentials
+5. **Verify Installation**: Check for "Cloudflare D1" and "Cloudflare D1 Chat Memory" nodes
 
 ### Method 2: Manual Installation
 ```bash
-# Install the package globally
-npm install -g n8n-nodes-cloudflare-d1
+# Install the specific version globally
+npm install -g n8n-nodes-cloudflare-d1@0.2.0
 
 # Or install in your n8n custom directory
 cd ~/.n8n/custom
-npm install n8n-nodes-cloudflare-d1
+npm install n8n-nodes-cloudflare-d1@0.2.0
 ```
 
 ### Method 3: Local Development
@@ -66,9 +67,25 @@ npm link n8n-nodes-cloudflare-d1
 
 ### Testing Credentials
 ```javascript
-// Test query to verify setup
+// Test basic connection (Execute Query operation)
 SELECT 1 as test_connection;
+
+// Test chat memory functionality (if using chat memory node)
+SELECT name FROM sqlite_master WHERE type='table' AND name='chat_memory';
 ```
+
+### Node Configuration
+
+#### Main Node (Cloudflare D1)
+- **Available Operations**: Execute Query, Batch Queries, Execute Raw SQL
+- **Use Cases**: Database operations, data queries, bulk processing
+- **AI Agent Compatible**: Yes (usableAsTool: true)
+
+#### Chat Memory Sub-Node (Cloudflare D1 Chat Memory)
+- **Purpose**: LangChain-compatible chat message storage
+- **Use Cases**: AI Agent conversations, chat history, context management
+- **Configuration**: Session ID, table name, message limits, expiration
+- **Auto-Features**: Table creation, message cleanup, session management
 
 ## Environment-Specific Deployments
 
@@ -77,9 +94,15 @@ SELECT 1 as test_connection;
 # Start n8n in development mode
 npm run dev
 
-# Use local database for testing
+# Create test databases
 wrangler d1 create test-database
+wrangler d1 create chat-test-database
+
+# Set up basic test tables
 wrangler d1 execute test-database --command="CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT);"
+
+# Chat memory table is auto-created by the node, but you can verify:
+wrangler d1 execute chat-test-database --command="SELECT name FROM sqlite_master WHERE type='table';"
 ```
 
 ### Production Environment
@@ -103,11 +126,12 @@ wrangler d1 execute test-database --command="CREATE TABLE test (id INTEGER PRIMA
 FROM n8nio/n8n:latest
 
 USER root
-RUN npm install -g n8n-nodes-cloudflare-d1
+RUN npm install -g n8n-nodes-cloudflare-d1@0.2.0
 USER node
 
 # Custom environment variables
 ENV N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom
+ENV N8N_VERSION_NOTIFICATIONS_ENABLED=false
 ```
 
 ### Docker Compose
@@ -123,7 +147,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
       - ./custom:/home/node/.n8n/custom
-    command: npm install -g n8n-nodes-cloudflare-d1 && n8n start
+    command: npm install -g n8n-nodes-cloudflare-d1@0.2.0 && n8n start
 
 volumes:
   n8n_data:
@@ -162,12 +186,22 @@ process.env.N8N_LOG_OUTPUT = 'console';
 
 ### Health Checks
 ```bash
-# Test node availability
-curl -X POST http://localhost:5678/api/v1/nodes/available | grep cloudflare-d1
+# Test node availability (both nodes should appear)
+curl -X POST http://localhost:5678/api/v1/nodes/available | grep cloudflare
 
 # Test database connectivity
 # Create a simple workflow with SELECT 1 query
+
+# Test chat memory functionality
+# Create an AI Agent workflow with chat memory node connected
 ```
+
+### v0.2.0 Specific Monitoring
+- **Chat Memory Performance**: Monitor session cleanup operations
+- **Table Auto-Creation**: Check for successful table initialization
+- **Message Storage**: Track message insertion and retrieval rates
+- **Session Management**: Monitor session expiration and cleanup
+- **Memory Usage**: Track chat history storage growth
 
 ## Security Considerations
 
