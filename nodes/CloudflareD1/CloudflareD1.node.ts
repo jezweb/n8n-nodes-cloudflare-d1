@@ -313,7 +313,6 @@ export class CloudflareD1 implements INodeType {
 								default: '',
 								required: true,
 								description: 'Name of the column. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-								hint: 'TIP: Click "Add Column" button multiple times to insert values into several columns',
 							},
 							{
 								displayName: 'Value',
@@ -526,7 +525,6 @@ export class CloudflareD1 implements INodeType {
 								default: '',
 								required: true,
 								description: 'Name of the column to update. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-								hint: 'TIP: Click "Add Column" button multiple times to update several columns at once',
 							},
 							{
 								displayName: 'Value',

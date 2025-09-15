@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance analytics and query optimization
 - Custom SQL function support
 
+## [0.5.5] - 2025-01-15
+
+### Fixed
+- Removed redundant hint text from Insert and Update column fields
+- Cleaner UI without unnecessary tooltips
+
 ## [0.5.4] - 2025-01-15
 
 ### Improved
