@@ -13,6 +13,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance analytics and query optimization
 - Custom SQL function support
 
+## [0.5.4] - 2025-01-15
+
+### Improved
+#### Better User Experience for Column Management
+- **Enhanced Insert Operation**:
+  - Added helpful hints for using "Add Column" button to add multiple columns
+  - Improved value field description with expression examples
+  - Better guidance for AI Agents on column specification
+- **Enhanced Update Operation**:
+  - Added helpful hints for using "Add Column" button to update multiple columns
+  - Improved value field description with expression examples
+  - Clear instructions for both users and AI Agents
+- **Clearer Documentation**: All column-related operations now have better inline help text
+
+### Technical
+- Improved user experience without adding complex auto-loading features
+- Maintained stability by avoiding problematic dynamic column population
+- Enhanced descriptions for better AI Agent understanding
+
 ## [0.5.3] - 2025-01-15
 
 ### Added

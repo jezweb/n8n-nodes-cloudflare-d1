@@ -313,18 +313,19 @@ export class CloudflareD1 implements INodeType {
 								default: '',
 								required: true,
 								description: 'Name of the column. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+								hint: 'TIP: Click "Add Column" button multiple times to insert values into several columns',
 							},
 							{
 								displayName: 'Value',
 								name: 'value',
 								type: 'string',
 								default: '',
-								description: 'Value to insert',
+								description: 'Value to insert. Use expressions like {{ $JSON.fieldName }} for dynamic values.',
 							},
 						],
 					},
 				],
-				description: 'The columns and their values to insert',
+				description: 'The columns and values to insert. Click "Add Column" to add multiple columns at once. For AI Agents: specify each column as a name-value pair.',
 			},
 
 			// SELECT FIELDS
@@ -492,6 +493,7 @@ export class CloudflareD1 implements INodeType {
 				],
 			},
 
+
 			// UPDATE FIELDS
 			{
 				displayName: 'Update Columns',
@@ -524,18 +526,19 @@ export class CloudflareD1 implements INodeType {
 								default: '',
 								required: true,
 								description: 'Name of the column to update. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+								hint: 'TIP: Click "Add Column" button multiple times to update several columns at once',
 							},
 							{
 								displayName: 'Value',
 								name: 'value',
 								type: 'string',
 								default: '',
-								description: 'New value for the column',
+								description: 'New value for the column. Use expressions like {{ $JSON.fieldName }} for dynamic values.',
 							},
 						],
 					},
 				],
-				description: 'The columns to update and their new values',
+				description: 'The columns to update and their new values. Click "Add Column" to update multiple columns at once. For AI Agents: specify each column as a name-value pair.',
 			},
 			{
 				displayName: 'WHERE Conditions',
