@@ -13,6 +13,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance analytics and query optimization
 - Custom SQL function support
 
+## [0.5.3] - 2025-01-15
+
+### Added
+#### Find Record Operation (AI-Friendly)
+- **New Operation**: Simplified record location for AI agents and users
+  - Simple search interface with column dropdown, operator, and value
+  - "Find Latest Record" toggle to get most recently added rows (ORDER BY rowid DESC)
+  - Configurable limit (default 1, but adjustable for multiple records)
+  - Full operator support (equals, not equals, contains, greater than, less than, IN, NOT IN, IS NULL, etc.)
+  - Automatic wildcard addition for LIKE operator when not present
+  - Perfect for "create then update" AI workflows
+
+#### ORDER BY Support for SELECT Operation
+- **New Order By Field**: Add multiple sort columns
+- **Direction Control**: ASC/DESC for each column
+- **Column Dropdown**: Select columns from table schema
+- **Multiple Sort Levels**: Support for complex sorting requirements
+
+### Fixed
+#### WHERE Condition Operators
+- **All Operators Now Functional**: Fixed implementation for all SQL operators
+  - Equals (=), Not Equals (!=)
+  - Greater Than (>), Less Than (<), Greater/Less Than or Equal (>=, <=)
+  - LIKE, NOT LIKE with automatic wildcard support
+  - IN, NOT IN with comma-separated value support
+  - IS NULL, IS NOT NULL
+- **Applies to All Operations**: SELECT, UPDATE, and DELETE now support all operators
+- **Proper Parameter Binding**: All operators use secure parameterized queries
+
+### Technical
+- Enhanced WHERE clause building with proper operator handling
+- Improved query construction for SELECT, UPDATE, and DELETE operations
+- Better parameter binding for complex conditions
+- Maintained backward compatibility with existing workflows
+- Column dropdowns continue to work when manually adding fields
+
+### Note
+- Removed auto column loading feature that was causing connection issues
+- Manual column selection with dropdown continues to work as before
+
 ## [0.5.2] - 2025-01-28
 
 ### Added

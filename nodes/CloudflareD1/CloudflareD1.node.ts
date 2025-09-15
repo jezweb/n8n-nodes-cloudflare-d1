@@ -112,6 +112,18 @@ export class CloudflareD1 implements INodeType {
 				},
 				options: [
 					{
+						name: 'Delete',
+						value: 'delete',
+						description: 'Delete rows from a table',
+						action: 'Delete rows from table',
+					},
+					{
+						name: 'Find Record',
+						value: 'findRecord',
+						description: 'Find one or more records using simple search (AI-friendly)',
+						action: 'Find records in table',
+					},
+					{
 						name: 'Insert',
 						value: 'insert',
 						description: 'Insert new rows into a table',
@@ -128,12 +140,6 @@ export class CloudflareD1 implements INodeType {
 						value: 'update',
 						description: 'Update existing rows in a table',
 						action: 'Update rows in table',
-					},
-					{
-						name: 'Delete',
-						value: 'delete',
-						description: 'Delete rows from a table',
-						action: 'Delete rows from table',
 					},
 				],
 				default: 'insert',
@@ -178,6 +184,101 @@ export class CloudflareD1 implements INodeType {
 				],
 				required: true,
 				description: 'The table to operate on',
+			},
+
+			// FIND RECORD FIELDS
+			{
+				displayName: 'Search Column Name or ID',
+				name: 'findColumn',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['table'],
+						operation: ['findRecord'],
+					},
+				},
+				typeOptions: {
+					loadOptionsDependsOn: ['table'],
+					loadOptionsMethod: 'getTableColumns',
+				},
+				default: '',
+				required: true,
+				description: 'Column to search in. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+			},
+			{
+				displayName: 'Search Operator',
+				name: 'findOperator',
+				type: 'options',
+				displayOptions: {
+					show: {
+						resource: ['table'],
+						operation: ['findRecord'],
+					},
+				},
+				options: [
+					{ name: 'Contains', value: 'LIKE', description: 'Use % for wildcards' },
+					{ name: 'Equals', value: '=' },
+					{ name: 'Greater Than', value: '>' },
+					{ name: 'Greater Than or Equal', value: '>=' },
+					{ name: 'In List', value: 'IN', description: 'Comma-separated values' },
+					{ name: 'Is Not Null', value: 'IS NOT NULL' },
+					{ name: 'Is Null', value: 'IS NULL' },
+					{ name: 'Less Than', value: '<' },
+					{ name: 'Less Than or Equal', value: '<=' },
+					{ name: 'Not Contains', value: 'NOT LIKE' },
+					{ name: 'Not Equals', value: '!=' },
+					{ name: 'Not In List', value: 'NOT IN', description: 'Comma-separated values' },
+				],
+				default: '=',
+				description: 'How to compare the search value',
+			},
+			{
+				displayName: 'Search Value',
+				name: 'findValue',
+				type: 'string',
+				displayOptions: {
+					show: {
+						resource: ['table'],
+						operation: ['findRecord'],
+					},
+					hide: {
+						findOperator: ['IS NULL', 'IS NOT NULL'],
+					},
+				},
+				default: '',
+				description: 'Value to search for. For LIKE operator, use % as wildcard. For IN/NOT IN, use comma-separated values.',
+			},
+			{
+				displayName: 'Options',
+				name: 'findOptions',
+				type: 'collection',
+				placeholder: 'Add Option',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['table'],
+						operation: ['findRecord'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Find Latest Record',
+						name: 'findLatest',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to return the most recently added record(s) by sorting by rowid DESC',
+					},
+					{
+						displayName: 'Limit',
+						name: 'findLimit',
+						type: 'number',
+						typeOptions: {
+							minValue: 1,
+						},
+						default: 1,
+						description: 'Maximum number of records to return',
+					},
+				],
 			},
 
 			// INSERT FIELDS
@@ -338,6 +439,53 @@ export class CloudflareD1 implements INodeType {
 								},
 								default: '',
 								description: 'Value to compare against',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Order By',
+				name: 'orderBy',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				displayOptions: {
+					show: {
+						resource: ['table'],
+						operation: ['select'],
+					},
+				},
+				default: {},
+				placeholder: 'Add Sort',
+				options: [
+					{
+						name: 'sort',
+						displayName: 'Sort',
+						values: [
+							{
+								displayName: 'Column Name or ID',
+								name: 'column',
+								type: 'options',
+								typeOptions: {
+									loadOptionsDependsOn: ['table'],
+									loadOptionsMethod: 'getTableColumns',
+								},
+								default: '',
+								required: true,
+								description: 'Column to sort by. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+							},
+							{
+								displayName: 'Direction',
+								name: 'direction',
+								type: 'options',
+								options: [
+									{ name: 'Ascending', value: 'ASC' },
+									{ name: 'Descending', value: 'DESC' },
+								],
+								default: 'ASC',
+								description: 'Sort direction',
 							},
 						],
 					},
@@ -1618,6 +1766,61 @@ export class CloudflareD1 implements INodeType {
 					CloudflareD1Utils.validateTableName(tableName);
 
 					switch (operation) {
+						case 'findRecord':
+							const findColumn = this.getNodeParameter('findColumn', i) as string;
+							const findOperator = this.getNodeParameter('findOperator', i) as string;
+							const findValue = this.getNodeParameter('findValue', i, '') as string;
+							const findOptions = this.getNodeParameter('findOptions', i, {}) as IDataObject;
+
+							const findLatest = findOptions.findLatest as boolean || false;
+							const findLimit = findOptions.findLimit as number || 1;
+
+							// Build the WHERE clause
+							let whereClause = '';
+							const params: any[] = [];
+
+							if (findOperator === 'IS NULL' || findOperator === 'IS NOT NULL') {
+								whereClause = `"${findColumn}" ${findOperator}`;
+							} else if (findOperator === 'IN' || findOperator === 'NOT IN') {
+								const values = findValue.split(',').map(v => v.trim());
+								const placeholders = values.map(() => '?').join(', ');
+								whereClause = `"${findColumn}" ${findOperator} (${placeholders})`;
+								params.push(...values);
+							} else if (findOperator === 'LIKE' || findOperator === 'NOT LIKE') {
+								whereClause = `"${findColumn}" ${findOperator} ?`;
+								// If no wildcards, add them for "contains" behavior
+								let searchValue = findValue;
+								if (!searchValue.includes('%')) {
+									searchValue = `%${searchValue}%`;
+								}
+								params.push(searchValue);
+							} else {
+								whereClause = `"${findColumn}" ${findOperator} ?`;
+								params.push(findValue);
+							}
+
+							// Build the query
+							let findSql = `SELECT * FROM "${tableName}" WHERE ${whereClause}`;
+
+							// Add ORDER BY if finding latest
+							if (findLatest) {
+								findSql += ' ORDER BY rowid DESC';
+							}
+
+							// Add LIMIT
+							findSql += ` LIMIT ${findLimit}`;
+
+							const findResponse = await CloudflareD1Utils.executeQuery(this, config, findSql, params);
+
+							result = {
+								success: findResponse.result[0].success,
+								results: findResponse.result[0].results,
+								meta: findResponse.result[0].meta,
+								rowsRead: findResponse.result[0].meta?.rows_read || 0,
+								count: findResponse.result[0].results?.length || 0,
+							};
+							break;
+
 						case 'insert':
 							const columnValues = this.getNodeParameter('columnValues.property', i, []) as Array<{name: string, value: any}>;
 							
@@ -1651,18 +1854,60 @@ export class CloudflareD1 implements INodeType {
 							const columns = this.getNodeParameter('columns', i, []) as string[];
 							const whereConditions = this.getNodeParameter('where.condition', i, []) as Array<{column: string, operator: string, value: any}>;
 
-							// Build WHERE clause (simplified - only equals for now)
-							const where: IDataObject = {};
-							for (const condition of whereConditions) {
-								if (condition.operator === '=' && condition.value !== undefined) {
-									where[condition.column] = condition.value;
+							// Build WHERE clause with proper operator support
+							let whereSql = '';
+							const whereParams: any[] = [];
+
+							if (whereConditions.length > 0) {
+								const conditions: string[] = [];
+
+								for (const condition of whereConditions) {
+									if (condition.operator === 'IS NULL' || condition.operator === 'IS NOT NULL') {
+										conditions.push(`"${condition.column}" ${condition.operator}`);
+									} else if (condition.operator === 'IN' || condition.operator === 'NOT IN') {
+										const values = condition.value?.split(',').map((v: string) => v.trim()) || [];
+										if (values.length > 0) {
+											const placeholders = values.map(() => '?').join(', ');
+											conditions.push(`"${condition.column}" ${condition.operator} (${placeholders})`);
+											whereParams.push(...values);
+										}
+									} else if (condition.operator === 'LIKE' || condition.operator === 'NOT LIKE') {
+										conditions.push(`"${condition.column}" ${condition.operator} ?`);
+										let searchValue = condition.value;
+										// Auto-add wildcards for LIKE if not present
+										if (condition.operator === 'LIKE' && !searchValue?.includes('%')) {
+											searchValue = `%${searchValue}%`;
+										}
+										whereParams.push(searchValue);
+									} else if (condition.value !== undefined && condition.value !== '') {
+										conditions.push(`"${condition.column}" ${condition.operator} ?`);
+										whereParams.push(condition.value);
+									}
+								}
+
+								if (conditions.length > 0) {
+									whereSql = ' WHERE ' + conditions.join(' AND ');
 								}
 							}
 
 							const selectColumns = columns.length > 0 ? columns : ['*'];
-							const { sql: selectSql, params: selectParams } = CloudflareD1Utils.buildSelectQuery(tableName, selectColumns, where, undefined, limit);
-							const selectResponse = await CloudflareD1Utils.executeQuery(this, config, selectSql, selectParams);
-							
+							const columnList = selectColumns.includes('*') ? '*' : selectColumns.map(col => `"${col}"`).join(', ');
+
+							let selectSql = `SELECT ${columnList} FROM "${tableName}"${whereSql}`;
+
+							// Add ORDER BY
+							const orderByConditions = this.getNodeParameter('orderBy.sort', i, []) as Array<{column: string, direction: string}>;
+							if (orderByConditions.length > 0) {
+								const orderClauses = orderByConditions.map(order => `"${order.column}" ${order.direction}`);
+								selectSql += ' ORDER BY ' + orderClauses.join(', ');
+							}
+
+							if (limit) {
+								selectSql += ` LIMIT ${limit}`;
+							}
+
+							const selectResponse = await CloudflareD1Utils.executeQuery(this, config, selectSql, whereParams);
+
 							result = {
 								success: selectResponse.result[0].success,
 								results: selectResponse.result[0].results,
@@ -1688,15 +1933,50 @@ export class CloudflareD1 implements INodeType {
 								updateData[field.name] = field.value;
 							}
 
-							// Build WHERE clause (simplified - only equals for now)
-							const whereUpdate: IDataObject = {};
-							for (const condition of whereUpdateConditions) {
-								if (condition.operator === '=' && condition.value !== undefined) {
-									whereUpdate[condition.column] = condition.value;
+							// Build WHERE clause with proper operator support
+							let whereUpdateSql = '';
+							const whereUpdateParams: any[] = [];
+
+							if (whereUpdateConditions.length > 0) {
+								const conditions: string[] = [];
+
+								for (const condition of whereUpdateConditions) {
+									if (condition.operator === 'IS NULL' || condition.operator === 'IS NOT NULL') {
+										conditions.push(`"${condition.column}" ${condition.operator}`);
+									} else if (condition.operator === 'IN') {
+										const values = condition.value?.split(',').map((v: string) => v.trim()) || [];
+										if (values.length > 0) {
+											const placeholders = values.map(() => '?').join(', ');
+											conditions.push(`"${condition.column}" ${condition.operator} (${placeholders})`);
+											whereUpdateParams.push(...values);
+										}
+									} else if (condition.operator === 'LIKE') {
+										conditions.push(`"${condition.column}" ${condition.operator} ?`);
+										whereUpdateParams.push(condition.value);
+									} else if (condition.value !== undefined && condition.value !== '') {
+										conditions.push(`"${condition.column}" ${condition.operator} ?`);
+										whereUpdateParams.push(condition.value);
+									}
+								}
+
+								if (conditions.length > 0) {
+									whereUpdateSql = conditions.join(' AND ');
 								}
 							}
 
-							const { sql: updateSql, params: updateParams } = CloudflareD1Utils.buildUpdateQuery(tableName, updateData, whereUpdate);
+							// Build UPDATE query manually with proper WHERE clause
+							const updateColumns = Object.keys(updateData);
+							const updateValues = Object.values(updateData);
+							const setClause = updateColumns.map(col => `"${col}" = ?`).join(', ');
+
+							let updateSql = `UPDATE "${tableName}" SET ${setClause}`;
+							const updateParams = [...updateValues];
+
+							if (whereUpdateSql) {
+								updateSql += ` WHERE ${whereUpdateSql}`;
+								updateParams.push(...whereUpdateParams);
+							}
+
 							const updateResponse = await CloudflareD1Utils.executeQuery(this, config, updateSql, updateParams);
 							
 							result = {
@@ -1712,15 +1992,49 @@ export class CloudflareD1 implements INodeType {
 							const whereDeleteConditions = this.getNodeParameter('whereDelete.condition', i, []) as Array<{column: string, operator: string, value: any}>;
 							const deleteLimit = this.getNodeParameter('deleteLimit', i) as number | undefined;
 
-							// Build WHERE clause (simplified - only equals for now)
-							const whereDelete: IDataObject = {};
-							for (const condition of whereDeleteConditions) {
-								if (condition.operator === '=' && condition.value !== undefined) {
-									whereDelete[condition.column] = condition.value;
+							// Build WHERE clause with proper operator support
+							let whereDeleteSql = '';
+							const whereDeleteParams: any[] = [];
+
+							if (whereDeleteConditions.length > 0) {
+								const conditions: string[] = [];
+
+								for (const condition of whereDeleteConditions) {
+									if (condition.operator === 'IS NULL' || condition.operator === 'IS NOT NULL') {
+										conditions.push(`"${condition.column}" ${condition.operator}`);
+									} else if (condition.operator === 'IN') {
+										const values = condition.value?.split(',').map((v: string) => v.trim()) || [];
+										if (values.length > 0) {
+											const placeholders = values.map(() => '?').join(', ');
+											conditions.push(`"${condition.column}" ${condition.operator} (${placeholders})`);
+											whereDeleteParams.push(...values);
+										}
+									} else if (condition.operator === 'LIKE') {
+										conditions.push(`"${condition.column}" ${condition.operator} ?`);
+										whereDeleteParams.push(condition.value);
+									} else if (condition.value !== undefined && condition.value !== '') {
+										conditions.push(`"${condition.column}" ${condition.operator} ?`);
+										whereDeleteParams.push(condition.value);
+									}
+								}
+
+								if (conditions.length > 0) {
+									whereDeleteSql = conditions.join(' AND ');
 								}
 							}
 
-							const { sql: deleteSql, params: deleteParams } = CloudflareD1Utils.buildDeleteQuery(tableName, whereDelete, deleteLimit);
+							// Build DELETE query manually
+							let deleteSql = `DELETE FROM "${tableName}"`;
+							const deleteParams = [...whereDeleteParams];
+
+							if (whereDeleteSql) {
+								deleteSql += ` WHERE ${whereDeleteSql}`;
+							}
+
+							if (deleteLimit) {
+								deleteSql += ` LIMIT ${deleteLimit}`;
+							}
+
 							const deleteResponse = await CloudflareD1Utils.executeQuery(this, config, deleteSql, deleteParams);
 							
 							result = {
