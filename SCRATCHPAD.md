@@ -239,3 +239,46 @@ interface D1QueryBuilder {
 - 2025-01-28 10:00 - Started Phase 3 implementation
 - 2025-01-28 10:15 - Created detailed SCRATCHPAD plan
 - 2025-01-28 10:20 - Starting CloudflareD1Types.ts updates
+
+## Phase 4: AI-Friendly Enhancements (v0.6.0) - ✅ COMPLETED 2025-01-15
+
+### Enhancement Goals:
+1. **Find Record Operation** - Simplified record location for AI agents
+2. **Auto Column Loading** - Automatic column population for Update operations
+3. **Fix WHERE Operators** - Proper implementation of all SQL operators
+4. **ORDER BY Support** - Add sorting to SELECT operations
+
+### Implementation Completed:
+
+#### 4A: Find Record Operation ✅
+- ✅ Added 'findRecord' operation to table resource
+- ✅ Simple search interface (column, operator, value)
+- ✅ "Find Latest" toggle for ORDER BY rowid DESC
+- ✅ Configurable limit (default 1, but adjustable)
+- ✅ Returns single or multiple records based on limit
+
+#### 4B: Auto Column Loading for Update ✅
+- ✅ Added "Column Selection Mode" dropdown
+- ✅ Implemented "Load All Columns" functionality
+- ✅ Implemented "Load Editable Columns" (exclude PKs)
+- ✅ Enhanced loadOptions method for dynamic column population
+- ✅ Pre-fills with input data field references
+
+#### 4C: Fix WHERE Condition Processing ✅
+- ✅ Fixed SELECT to handle all operators properly
+- ✅ Fixed UPDATE operator implementation
+- ✅ Fixed DELETE operator implementation
+- ✅ Added proper IN/NOT IN array handling
+- ✅ Fixed IS NULL/IS NOT NULL handling
+
+#### 4D: Add ORDER BY to SELECT ✅
+- ✅ Added orderBy field collection to SELECT
+- ✅ Support for multiple sort columns
+- ✅ Added ASC/DESC direction option
+- ✅ Updated SELECT implementation to include ORDER BY
+
+### Technical Implementation Notes:
+- Find Record will be a new operation alongside Insert/Select/Update/Delete
+- Auto column loading will use existing getTableColumns loadOptions method
+- WHERE fixes require updating both node and utils to properly process operators
+- All changes maintain backward compatibility

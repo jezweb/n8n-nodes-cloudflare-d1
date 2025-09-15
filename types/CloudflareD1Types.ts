@@ -1,13 +1,14 @@
 import { IDataObject } from 'n8n-workflow';
 
 // Core operation types
-export type D1Operation = 
-	| 'insert' 
-	| 'select' 
-	| 'update' 
-	| 'delete' 
-	| 'executeQuery' 
-	| 'batchQueries' 
+export type D1Operation =
+	| 'findRecord'
+	| 'insert'
+	| 'select'
+	| 'update'
+	| 'delete'
+	| 'executeQuery'
+	| 'batchQueries'
 	| 'executeRawSql'
 	// Table management operations
 	| 'createTable'
