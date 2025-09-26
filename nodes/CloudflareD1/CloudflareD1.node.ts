@@ -26,7 +26,7 @@ export class CloudflareD1 implements INodeType {
 		name: 'cloudflareD1',
 		icon: 'file:cloudflared1.svg',
 		group: ['database'],
-		version: 2,
+		version: 3,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
 		description: 'Execute operations against Cloudflare D1 serverless databases. Supports structured operations (Insert, Select, Update, Delete), raw SQL queries, and can be used as a tool by AI Agents.',
 		defaults: {
@@ -188,22 +188,63 @@ export class CloudflareD1 implements INodeType {
 
 			// FIND RECORD FIELDS
 			{
-				displayName: 'Search Column Name or ID',
-				name: 'findColumn',
-				type: 'options',
+				displayName: 'Note: Select a table first to load available columns',
+				name: 'findColumnNotice',
+				type: 'notice',
+				default: '',
 				displayOptions: {
 					show: {
 						resource: ['table'],
 						operation: ['findRecord'],
 					},
 				},
-				typeOptions: {
-					loadOptionsDependsOn: ['table'],
-					loadOptionsMethod: 'getTableColumns',
+			},
+			{
+				displayName: 'Search Column Name or ID',
+				name: 'findColumn',
+				type: 'resourceLocator',
+				default: { mode: 'list', value: '' },
+				displayOptions: {
+					show: {
+						resource: ['table'],
+						operation: ['findRecord'],
+					},
 				},
-				default: '',
+				modes: [
+					{
+						displayName: 'From List',
+						name: 'list',
+						type: 'list',
+						typeOptions: {
+							searchListMethod: 'columnSearch',
+							searchable: true,
+							searchFilterRequired: false,
+						},
+					},
+					{
+						displayName: 'Column Name',
+						name: 'name',
+						type: 'string',
+						placeholder: 'column_name',
+						validation: [
+							{
+								type: 'regex',
+								properties: {
+									regex: '^[a-zA-Z_][a-zA-Z0-9_]*$',
+									errorMessage: 'Column name must start with a letter or underscore and contain only letters, numbers, and underscores',
+								},
+							},
+						],
+					},
+					{
+						displayName: 'ID',
+						name: 'id',
+						type: 'string',
+						placeholder: 'id',
+					},
+				],
 				required: true,
-				description: 'Column to search in. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				description: 'Column to search in. Select from list after choosing a table, enter the column name manually, or use an expression.',
 			},
 			{
 				displayName: 'Search Operator',
@@ -216,21 +257,69 @@ export class CloudflareD1 implements INodeType {
 					},
 				},
 				options: [
-					{ name: 'Contains', value: 'LIKE', description: 'Use % for wildcards' },
-					{ name: 'Equals', value: '=' },
-					{ name: 'Greater Than', value: '>' },
-					{ name: 'Greater Than or Equal', value: '>=' },
-					{ name: 'In List', value: 'IN', description: 'Comma-separated values' },
-					{ name: 'Is Not Null', value: 'IS NOT NULL' },
-					{ name: 'Is Null', value: 'IS NULL' },
-					{ name: 'Less Than', value: '<' },
-					{ name: 'Less Than or Equal', value: '<=' },
-					{ name: 'Not Contains', value: 'NOT LIKE' },
-					{ name: 'Not Equals', value: '!=' },
-					{ name: 'Not In List', value: 'NOT IN', description: 'Comma-separated values' },
+					{
+						name: 'Contains',
+						value: 'LIKE',
+						description: 'Search for values containing the text (uses % wildcards automatically)'
+					},
+					{
+						name: 'Equals',
+						value: '=',
+						description: 'Exact match'
+					},
+					{
+						name: 'Greater Than',
+						value: '>',
+						description: 'Greater than value'
+					},
+					{
+						name: 'Greater Than or Equal',
+						value: '>=',
+						description: 'Greater than or equal to value'
+					},
+					{
+						name: 'In List',
+						value: 'IN',
+						description: 'Value is in a comma-separated list'
+					},
+					{
+						name: 'Is Not Null',
+						value: 'IS NOT NULL',
+						description: 'Column value is not NULL'
+					},
+					{
+						name: 'Is Null',
+						value: 'IS NULL',
+						description: 'Column value is NULL'
+					},
+					{
+						name: 'Less Than',
+						value: '<',
+						description: 'Less than value'
+					},
+					{
+						name: 'Less Than or Equal',
+						value: '<=',
+						description: 'Less than or equal to value'
+					},
+					{
+						name: 'Not Contains',
+						value: 'NOT LIKE',
+						description: 'Does not contain the text'
+					},
+					{
+						name: 'Not Equals',
+						value: '!=',
+						description: 'Not equal to value'
+					},
+					{
+						name: 'Not In List',
+						value: 'NOT IN',
+						description: 'Value is not in a comma-separated list'
+					},
 				],
 				default: '=',
-				description: 'How to compare the search value',
+				description: 'How to compare the search value. For AI Agents: use "=" for exact match, "LIKE" for contains, "IN" for multiple values.',
 			},
 			{
 				displayName: 'Search Value',
@@ -1695,13 +1784,13 @@ export class CloudflareD1 implements INodeType {
 				paginationToken?: string
 			): Promise<INodeListSearchResult> {
 				const databaseId = this.getNodeParameter('databaseId') as string;
-				
+
 				try {
 					const config = await CloudflareD1Utils.getConnectionConfig(this as any);
 					config.databaseId = databaseId;
-					
+
 					const tables = await CloudflareD1Utils.getTables(this as any, config);
-					
+
 					const results: INodeListSearchItems[] = tables
 						.filter((table: D1TableInfo) => {
 							if (!filter) return true;
@@ -1715,6 +1804,40 @@ export class CloudflareD1 implements INodeType {
 					return { results };
 				} catch (error) {
 					throw new NodeOperationError(this.getNode(), `Failed to load tables: ${error.message}`);
+				}
+			},
+			async columnSearch(
+				this: ILoadOptionsFunctions,
+				filter?: string,
+				paginationToken?: string
+			): Promise<INodeListSearchResult> {
+				const databaseId = this.getNodeParameter('databaseId') as string;
+				const table = this.getNodeParameter('table') as { mode: string; value: string } | string;
+
+				const tableName = typeof table === 'string' ? table : table.value;
+				if (!tableName) {
+					return { results: [] };
+				}
+
+				try {
+					const config = await CloudflareD1Utils.getConnectionConfig(this as any);
+					config.databaseId = databaseId;
+
+					const schema = await CloudflareD1Utils.getTableSchema(this as any, config, tableName);
+
+					const results: INodeListSearchItems[] = schema.columns
+						.filter((column: D1ColumnInfo) => {
+							if (!filter) return true;
+							return column.name.toLowerCase().includes(filter.toLowerCase());
+						})
+						.map((column: D1ColumnInfo) => ({
+							name: `${column.name} (${column.type})${column.primaryKey ? ' - PK' : ''}${!column.nullable ? ' - NOT NULL' : ''}`,
+							value: column.name,
+						}));
+
+					return { results };
+				} catch (error) {
+					return { results: [] };
 				}
 			},
 		},
@@ -1768,7 +1891,8 @@ export class CloudflareD1 implements INodeType {
 
 					switch (operation) {
 						case 'findRecord':
-							const findColumn = this.getNodeParameter('findColumn', i) as string;
+							const findColumnRaw = this.getNodeParameter('findColumn', i) as { mode: string; value: string } | string;
+							const findColumn = typeof findColumnRaw === 'string' ? findColumnRaw : findColumnRaw.value;
 							const findOperator = this.getNodeParameter('findOperator', i) as string;
 							const findValue = this.getNodeParameter('findValue', i, '') as string;
 							const findOptions = this.getNodeParameter('findOptions', i, {}) as IDataObject;
