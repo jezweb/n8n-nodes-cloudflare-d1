@@ -26,7 +26,7 @@ export class CloudflareD1 implements INodeType {
 		name: 'cloudflareD1',
 		icon: 'file:cloudflared1.svg',
 		group: ['database'],
-		version: 3,
+		version: 2,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
 		description: 'Execute operations against Cloudflare D1 serverless databases. Supports structured operations (Insert, Select, Update, Delete), raw SQL queries, and can be used as a tool by AI Agents.',
 		defaults: {

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.7] - 2025-01-27
+
+### Fixed
+- Reverted node version from 3 to 2 to fix compatibility issues with existing workflows
+- Resolved "node is not currently installed" error that appeared after v0.5.6 update
+- Fixed conflict where Search Messages operation was causing node registration issues
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
