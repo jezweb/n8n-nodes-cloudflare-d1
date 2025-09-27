@@ -1,50 +1,60 @@
-# n8n Cloudflare D1 Node v0.4.0
+# n8n Cloudflare D1 Node v0.5.7
 
 [![npm version](https://badge.fury.io/js/n8n-nodes-cloudflare-d1.svg)](https://badge.fury.io/js/n8n-nodes-cloudflare-d1)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive n8n community node for integrating with Cloudflare D1, a serverless SQLite-compatible database. Version 0.4.0 includes complete table management, visual query builders, database administration tools, structured database operations (Insert, Select, Update, Delete), and chat memory capabilities for AI Agent workflows.
+A comprehensive n8n community node for integrating with Cloudflare D1, a serverless SQLite-compatible database. This node provides complete database management, visual query builders, AI-friendly operations, structured CRUD operations, and advanced chat memory capabilities for AI Agent workflows.
 
 ![Cloudflare D1 Node](https://raw.githubusercontent.com/jezweb/n8n-nodes-cloudflare-d1/main/docs/images/node-preview.png)
 
 ## Features
 
-### Table Management (v0.4.0) 🆕
+### Core Database Operations
+- ➕ **Insert**: Add new records with column mapping
+- 🔍 **Select**: Query records with conditions and sorting
+- ✏️ **Update**: Modify existing records
+- ❌ **Delete**: Remove records with conditions
+- 🎯 **Find Record** (v0.5.6): AI-friendly simple search operation with intelligent operators
+
+### Table Management
 - 📋 **Create Tables**: Visual table builder without SQL knowledge
 - 🔍 **List Tables**: View all tables and views in your database
 - 📊 **Schema Inspection**: View table structure and column definitions
 - 🗑️ **Drop Tables**: Safe table deletion with IF EXISTS support
 - 🔧 **Alter Tables**: Add/drop columns, rename tables, manage indexes
 
-### Query Builder Tools (v0.4.0) 🆕
+### Query Builder Tools
 - 🎨 **Visual Query Builder**: Build complex SELECT queries without SQL
 - 📈 **Aggregate Queries**: COUNT, SUM, AVG, MIN, MAX, GROUP_CONCAT
 - 🔎 **Search Records**: Full-text search across multiple columns
 - 🎯 **Distinct Values**: Extract unique values from columns
 - 📊 **Table Statistics**: Row counts and database analytics
 
-### Database Management (v0.4.0) 🆕
+### Database Management
 - 💾 **Export Database**: Backup databases to SQL files
 - 📂 **Import Database**: Restore from SQL dumps
 - ℹ️ **Database Info**: View metadata, size, and creation date
 - 📝 **List Databases**: View all D1 databases in your account
 
-### Core Database Operations
-- 🗄️ **Full D1 Integration**: Execute SQL queries, batch operations, and raw SQL commands
-- ⚡ **High Performance**: Batch operations and parameterized queries for optimal performance
-- 🛡️ **SQL Injection Protection**: Parameterized queries prevent SQL injection attacks
-- 📊 **Rich Data Types**: Full support for JSON operations and SQLite data types
+### Memory Resource Operations (v0.5.0)
+- 📚 **Get Chat History**: Retrieve conversation messages by session
+- 🔍 **Search Messages**: Full-text search across all chat sessions with fuzzy matching
+- ⏱️ **Get Recent Messages**: Fetch the most recent messages from a session
+- 📋 **Get Session List**: List all available chat sessions with message counts
+- 🗑️ **Clear Session**: Delete all messages from a specific session
 
-### AI & Chat Capabilities (v0.2.0)
+### AI & Chat Capabilities
 - 🤖 **AI Agent Compatible**: Optimized for use with n8n AI Agents and MCP Trigger nodes
 - 💬 **Chat Memory Storage**: LangChain-compatible chat message storage and retrieval
 - 🧠 **Session Management**: Automatic conversation context and session handling
 - 🔄 **Auto-Cleanup**: Message expiration and memory management
+- 🔎 **Fuzzy Search** (v0.5.2): Advanced message search with fuzzy matching capabilities
 
 ### Security & Reliability
 - 🔐 **Secure Authentication**: Cloudflare API token-based authentication with credential encryption
+- 🛡️ **SQL Injection Protection**: Parameterized queries prevent SQL injection attacks
 - 🔍 **Error Handling**: Comprehensive error reporting and debugging support
-- 📈 **Enhanced Infrastructure**: Type-safe query builders and utility functions
+- ⚡ **High Performance**: Batch operations and optimized query execution
 - 🔧 **Developer Experience**: Rich TypeScript types and comprehensive documentation
 
 ## Quick Start
@@ -142,7 +152,24 @@ WHERE id = ?;
 
 ### Main Node: Cloudflare D1
 
-#### Table Management Operations (v0.4.0)
+#### Structured Operations
+
+##### Find Record (v0.5.6)
+AI-friendly operation for finding records with simple search criteria. Automatically handles operator selection based on value type.
+
+##### Insert
+Add new records to a table with column mapping and value specification.
+
+##### Select
+Query records with conditions, sorting, and column selection.
+
+##### Update
+Modify existing records with WHERE conditions.
+
+##### Delete
+Remove records from a table based on conditions.
+
+#### Table Management Operations
 
 ##### Create Table
 Create a new table visually without writing SQL. Use the column builder to add columns with types and constraints.
@@ -164,7 +191,7 @@ Safely delete a table with optional IF EXISTS clause.
 ##### Alter Table
 Modify table structure (add/drop columns, rename, manage indexes).
 
-#### Query Builder Operations (v0.4.0)
+#### Query Builder Operations
 
 ##### Query Builder
 Build complex SELECT queries visually without SQL knowledge.
@@ -194,7 +221,24 @@ Extract unique values from one or more columns.
 ##### Table Statistics
 Get row counts and database analytics.
 
-#### Database Management Operations (v0.4.0)
+#### Memory Resource Operations
+
+##### Get Chat History
+Retrieve conversation messages from a specific session with filtering options.
+
+##### Search Messages
+Search across all chat sessions with full-text and fuzzy search capabilities.
+
+##### Get Recent Messages
+Fetch the most recent messages from a session for context.
+
+##### Get Session List
+List all available chat sessions with message counts and metadata.
+
+##### Clear Session
+Delete all messages from a specific session for cleanup.
+
+#### Database Management Operations
 
 ##### Export Database
 Export your entire database to a SQL dump file with a signed URL.
