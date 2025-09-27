@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.8] - 2025-01-27
+
+### Documentation
+- Updated README to v0.5.7 with complete feature documentation
+- Added Find Record operation documentation (v0.5.6)
+- Added Memory Resource operations section with all 5 operations
+- Added fuzzy search feature documentation (v0.5.2)
+- Reorganized features section for better clarity
+- Removed outdated version badges from older features
+
 ## [0.5.7] - 2025-01-27
 
 ### Fixed

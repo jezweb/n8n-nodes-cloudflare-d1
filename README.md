@@ -1,4 +1,4 @@
-# n8n Cloudflare D1 Node v0.5.7
+# n8n Cloudflare D1 Node
 
 [![npm version](https://badge.fury.io/js/n8n-nodes-cloudflare-d1.svg)](https://badge.fury.io/js/n8n-nodes-cloudflare-d1)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
